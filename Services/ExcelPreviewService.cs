@@ -13,6 +13,21 @@ namespace ExcelToPdfConverter.Services
             // License already set in Program.cs
         }
 
+        // ✅ NEW: Sheet orientation analysis class
+        public class SheetOrientationInfo
+        {
+            public string SheetName { get; set; } = string.Empty;
+            public string SuggestedOrientation { get; set; } = "Portrait";
+            public double WidthToHeightRatio { get; set; }
+            public int TotalColumns { get; set; }
+            public int TotalRows { get; set; }
+            public bool HasWideContent { get; set; }
+            public double AverageColumnWidth { get; set; }
+        }
+
+
+
+
         public PreviewModel GeneratePreview(IFormFile excelFile, string sessionId)
         {
             var previewModel = new PreviewModel
@@ -22,7 +37,10 @@ namespace ExcelToPdfConverter.Services
                 Worksheets = new List<WorksheetPreview>(),
                 FileSelections = new List<FileSelection>(),
                 AllNameErrors = new List<NameError>(),
-                AllInvoiceDates = new List<InvoiceDate>()
+                AllInvoiceDates = new List<InvoiceDate>(),
+                 // ✅ NEW: Orientation analysis storage
+                SuggestedOrientations = new Dictionary<string, string>(),
+                SheetOrientationAnalysis = new Dictionary<string, SheetOrientationInfo>()
             };
 
             try
@@ -34,6 +52,20 @@ namespace ExcelToPdfConverter.Services
                     using (var package = new ExcelPackage(stream))
                     {
                         Console.WriteLine($"Workbook has {package.Workbook.Worksheets.Count} worksheets");
+
+                        // ✅ STEP 1: FIRST Analyze all sheets for automatic orientation detection
+                        foreach (var worksheet in package.Workbook.Worksheets)
+                        {
+                            if (worksheet.Dimension != null)
+                            {
+                                //var orientationInfo = AnalyzeSheetOrientation(worksheet);
+                                //previewModel.SheetOrientationAnalysis[worksheet.Name] = orientationInfo;
+                                //previewModel.SuggestedOrientations[worksheet.Name] = orientationInfo.SuggestedOrientation;
+
+                                //Console.WriteLine($"📊 Orientation Analysis - {worksheet.Name}: {orientationInfo.SuggestedOrientation} " +
+                                //                $"(Ratio: {orientationInfo.WidthToHeightRatio:F2}, Columns: {orientationInfo.TotalColumns})");
+                            }
+                        }
 
                         // FIRST: Find all invoice dates using the robust method
                         var allInvoiceDates = new List<InvoiceDate>();
@@ -66,6 +98,11 @@ namespace ExcelToPdfConverter.Services
                                 .Where(id => id.SheetName == worksheet.Name)
                                 .ToList();
 
+                            // ✅ USE AUTOMATIC DETECTED ORIENTATION for file selection
+                            string suggestedOrientation = previewModel.SuggestedOrientations.ContainsKey(worksheet.Name)
+                                ? previewModel.SuggestedOrientations[worksheet.Name]
+                                : "Portrait";
+
                             // Create file selection entry - use the accurate invoice dates count
                             var fileSelection = new FileSelection
                             {
@@ -75,9 +112,12 @@ namespace ExcelToPdfConverter.Services
                                 HasNameErrors = worksheetPreview.NameErrors.Count > 0,
                                 HasInvoiceDates = sheetInvoiceDates.Count > 0,
                                 NameErrors = worksheetPreview.NameErrors,
-                                InvoiceDates = sheetInvoiceDates
+                                InvoiceDates = sheetInvoiceDates,
+                                //Orientation = suggestedOrientation
                             };
                             previewModel.FileSelections.Add(fileSelection);
+
+                            Console.WriteLine($"FileSelection for {worksheet.Name}: Orientation = {suggestedOrientation}");
 
                             Console.WriteLine($"FileSelection for {worksheet.Name}: HasInvoiceDates = {fileSelection.HasInvoiceDates}, Count = {fileSelection.InvoiceDates.Count}");
                         }
@@ -107,6 +147,79 @@ namespace ExcelToPdfConverter.Services
             }
 
             return previewModel;
+        }
+
+        // ✅ NEW: Automatic orientation detection based on content
+        private SheetOrientationInfo AnalyzeSheetOrientation(ExcelWorksheet worksheet)
+        {
+            var info = new SheetOrientationInfo
+            {
+                SheetName = worksheet.Name
+            };
+
+            if (worksheet.Dimension == null)
+                return info;
+
+            // Calculate content dimensions
+            int usedColumns = worksheet.Dimension.End.Column;
+            int usedRows = worksheet.Dimension.End.Row;
+
+            info.TotalColumns = usedColumns;
+            info.TotalRows = usedRows;
+
+            // Analyze column widths to determine if content is wide
+            double totalWidth = 0;
+            int wideColumns = 0;
+            int analyzedColumns = 0;
+
+            for (int col = 1; col <= Math.Min(usedColumns, 50); col++) // First 50 columns check
+            {
+                var width = worksheet.Column(col).Width;
+                if (width > 0) // Only consider columns with content
+                {
+                    totalWidth += width;
+                    analyzedColumns++;
+
+                    if (width > 20) // Wide column threshold (adjust as needed)
+                        wideColumns++;
+                }
+            }
+
+            if (analyzedColumns > 0)
+            {
+                info.AverageColumnWidth = totalWidth / analyzedColumns;
+
+                // Calculate approximate width-to-height ratio
+                // Assuming average row height of 15 points
+                double estimatedWidth = usedColumns * info.AverageColumnWidth;
+                double estimatedHeight = usedRows * 15;
+
+                info.WidthToHeightRatio = estimatedWidth / (estimatedHeight > 0 ? estimatedHeight : 1);
+                info.HasWideContent = wideColumns > (analyzedColumns * 0.3) || info.WidthToHeightRatio > 1.3;
+
+                // Determine suggested orientation based on analysis
+                if (info.HasWideContent || info.WidthToHeightRatio > 1.5)
+                {
+                    info.SuggestedOrientation = "Landscape";
+                }
+                else if (info.WidthToHeightRatio < 0.8)
+                {
+                    info.SuggestedOrientation = "Portrait";
+                }
+                else
+                {
+                    // For moderate ratios, use default based on column count
+                    info.SuggestedOrientation = usedColumns > 8 ? "Landscape" : "Portrait";
+                }
+            }
+            else
+            {
+                // Default to Portrait if no columns analyzed
+                info.SuggestedOrientation = "Portrait";
+                info.WidthToHeightRatio = 1.0;
+            }
+
+            return info;
         }
 
         public ValidationResult QuickValidate(IFormFile excelFile)

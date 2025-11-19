@@ -3,8 +3,11 @@
 @{
     ViewData["Title"] = "Preview - " + Model.OriginalFileName;
 }
-
+@Html.AntiForgeryToken()
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- ✅ SweetAlert2 CDN Add Karein Validation ke liye -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="container-fluid px-4">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center py-4 mb-4 border-bottom">
@@ -19,6 +22,11 @@
             <p class="text-muted mb-0">Review and select sheets for PDF conversion</p>
         </div>
         <div class="d-flex gap-2">
+
+            <button type="button" id="showFileNamesBtn" class="btn btn-info px-4">
+                <i class="fas fa-list me-2"></i>Show File Names
+            </button>
+
             <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Back
             </a>
@@ -27,6 +35,23 @@
             </button>
         </div>
     </div>
+
+    <!-- ✅ File Names Display Section -->
+    <div id="fileNamesSection" class="mb-4" style="display: none;">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file me-2"></i>File Names
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="fileNamesContent">
+                    <!-- File names yahan display honge -->
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Summary Cards -->
     <div class="row g-4 mb-4">
@@ -114,7 +139,7 @@
     @if (Model.HasInvoiceDates)
     {
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-success text-white">
+            <div class="card-header  bg-danger text-white">
                 <h5 class="mb-0">
                     <i class="fas fa-calendar-check me-2"></i>Invoice Dates Found (@Model.AllInvoiceDates.Count)
                 </h5>
@@ -144,7 +169,7 @@
                                     <td>@(counter++)</td>
                                     <td><strong>@invoiceDate.SheetName</strong></td>
                                     <td><code>@invoiceDate.InvoiceDateText</code></td>
-                                    <td><strong class="text-primary">@invoiceDate.DateValue</strong></td>
+                                    <td><strong class="text-danger">@invoiceDate.DateValue</strong></td>
                                     <td><code>@invoiceDate.Location</code></td>
                                 </tr>
                             }
@@ -217,68 +242,100 @@
                                         <strong>@file.SheetName</strong>
                                     </div>
                                 </td>
+                                @* <td class="text-center align-middle"> *@
+                                @*     <select class="form-select form-select-sm orientation-select" data-sheet="@file.SheetName" style="width: 120px;"> *@
+                                @*         @{ *@
+                                @*             // Default orientations based on sheet position and type *@
+                                @*             var isPortraitByDefault = false; *@
+                                @*             var isLandscapeByDefault = false; *@
+                                @*             var shouldRotate = file.SheetName.Contains("AOC", StringComparison.OrdinalIgnoreCase) || *@
+                                @*             file.SheetName.Contains("DIFF", StringComparison.OrdinalIgnoreCase) || *@
+                                @*             file.SheetName.Contains("FORM B", StringComparison.OrdinalIgnoreCase); *@
+
+                                @*             // Set defaults based on your requirements *@
+                                @*             if (file.SortOrder == 0 || file.SortOrder == 1 || file.SortOrder == 2 || file.SortOrder == 5) // 1st, 2nd, 3rd, 6th *@
+                                @*             { *@
+                                @*                 isPortraitByDefault = true; *@
+                                @*             } *@
+                                @*             else if (file.SortOrder == 3 || file.SortOrder == 4 || file.SortOrder == 6 || file.SortOrder == 7) // 4th, 5th, 7th, 8th *@
+                                @*             { *@
+                                @*                 isLandscapeByDefault = true; *@
+                                @*             } *@
+                                @*             else *@
+                                @*             { *@
+                                @*                 isPortraitByDefault = true; // Default for others *@
+                                @*             } *@
+
+                                @*             // Special handling for AOC and similar sheets *@
+                                @*             if (shouldRotate) *@
+                                @*             { *@
+                                @*                 if (isPortraitByDefault) *@
+                                @*                 { *@
+                                @*                     <option value="Portrait" selected>Portrait (90° Rotate)</option> *@
+                                @*                     <option value="Landscape">Landscape</option> *@
+                                @*                 } *@
+                                @*                 else *@
+                                @*                 { *@
+                                @*                     <option value="Portrait">Portrait (90° Rotate)</option> *@
+                                @*                     <option value="Landscape" selected>Landscape</option> *@
+                                @*                 } *@
+                                @*             } *@
+                                @*             else if (isPortraitByDefault) *@
+                                @*             { *@
+                                @*                 <option value="Portrait" selected>Portrait</option> *@
+                                @*                 <option value="Landscape">Landscape</option> *@
+                                @*             } *@
+                                @*             else if (isLandscapeByDefault) *@
+                                @*             { *@
+                                @*                 <option value="Landscape" selected>Landscape</option> *@
+                                @*                 <option value="Portrait">Portrait</option> *@
+                                @*             } *@
+                                @*             else *@
+                                @*             { *@
+                                @*                 <option value="Portrait" selected>Portrait</option> *@
+                                @*                 <option value="Landscape">Landscape</option> *@
+                                @*             } *@
+                                @*         } *@
+                                @*     </select> *@
+                                @*     @if (shouldRotate) *@
+                                @*     { *@
+                                @*         <div class="text-warning small mt-1"> *@
+                                @*             <i class="fas fa-sync-alt"></i> Auto-rotates 90° in Portrait *@
+                                @*         </div> *@
+                                @*     } *@
+                                @* </td> *@
+
                                 <td class="text-center align-middle">
                                     <select class="form-select form-select-sm orientation-select" data-sheet="@file.SheetName" style="width: 120px;">
                                         @{
-                                            // Default orientations based on sheet position and type
-                                            var isPortraitByDefault = false;
-                                            var isLandscapeByDefault = false;
-                                            var shouldRotate = file.SheetName.Contains("AOC", StringComparison.OrdinalIgnoreCase) ||
-                                            file.SheetName.Contains("DIFF", StringComparison.OrdinalIgnoreCase) ||
-                                            file.SheetName.Contains("FORM B", StringComparison.OrdinalIgnoreCase);
-
-                                            // Set defaults based on your requirements
-                                            if (file.SortOrder == 0 || file.SortOrder == 1 || file.SortOrder == 2 || file.SortOrder == 5) // 1st, 2nd, 3rd, 6th
-                                            {
-                                                isPortraitByDefault = true;
-                                            }
-                                            else if (file.SortOrder == 3 || file.SortOrder == 4 || file.SortOrder == 6 || file.SortOrder == 7) // 4th, 5th, 7th, 8th
-                                            {
-                                                isLandscapeByDefault = true;
-                                            }
-                                            else
-                                            {
-                                                isPortraitByDefault = true; // Default for others
-                                            }
-
-                                            // Special handling for AOC and similar sheets
-                                            if (shouldRotate)
-                                            {
-                                                if (isPortraitByDefault)
-                                                {
-                                                    <option value="Portrait" selected>Portrait (90° Rotate)</option>
-                                                    <option value="Landscape">Landscape</option>
-                                                }
-                                                else
-                                                {
-                                                    <option value="Portrait">Portrait (90° Rotate)</option>
-                                                    <option value="Landscape" selected>Landscape</option>
-                                                }
-                                            }
-                                            else if (isPortraitByDefault)
+                                            // ✅ NEW: Get suggested orientation from automatic detection
+                                            var suggestedOrientation = Model.SuggestedOrientations.ContainsKey(file.SheetName) 
+                                                ? Model.SuggestedOrientations[file.SheetName] 
+                                                : "Portrait";
+                                            
+                                            // ✅ SIMPLE: User can choose between Portrait and Landscape
+                                            // No more 90° rotation complexity
+                                            if (suggestedOrientation == "Portrait")
                                             {
                                                 <option value="Portrait" selected>Portrait</option>
                                                 <option value="Landscape">Landscape</option>
                                             }
-                                            else if (isLandscapeByDefault)
+                                            else
                                             {
-                                                <option value="Landscape" selected>Landscape</option>
                                                 <option value="Portrait">Portrait</option>
-                                            }
-                                            else
-                                            {
-                                                <option value="Portrait" selected>Portrait</option>
-                                                <option value="Landscape">Landscape</option>
+                                                <option value="Landscape" selected>Landscape</option>
                                             }
                                         }
                                     </select>
-                                    @if (shouldRotate)
+                                    @if (Model.SheetOrientationAnalysis.ContainsKey(file.SheetName))
                                     {
-                                        <div class="text-warning small mt-1">
-                                            <i class="fas fa-sync-alt"></i> Auto-rotates 90° in Portrait
+                                        var analysis = Model.SheetOrientationAnalysis[file.SheetName];
+                                        <div class="text-info small mt-1" title="Auto-detected based on content width/height">
+                                            <i class="fas fa-magic"></i> Auto: @analysis.SuggestedOrientation
                                         </div>
                                     }
                                 </td>
+
                                 <td class="text-center align-middle">
                                     @if (file.HasNameErrors)
                                     {
@@ -341,6 +398,327 @@
             const sheetCheckboxes = document.querySelectorAll('.sheet-checkbox');
             const selectedSheetsCount = document.getElementById('selectedSheetsCount');
             let isConverting = false;
+
+            // ✅ YEH VARIABLES ADD KAREIN - Ye missing the
+            const showFileNamesBtn = document.getElementById('showFileNamesBtn');
+            const fileNamesSection = document.getElementById('fileNamesSection');
+            const fileNamesContent = document.getElementById('fileNamesContent');
+
+            console.log("Session ID for file names:", sessionId);
+
+            // =============================================
+            // ✅ VALIDATION CODE START - YEH NAYA CODE HAI
+            // =============================================
+
+            // ✅ Validation function for #NAME? errors and Invoice Dates
+            function validateBeforeConversion() {
+                // ✅ TESTING KE LIYE: Agar aap validation bypass karna chahte hain, to
+                // niche wali line ko true return karein aur comment remove karein
+                // return true; // UNCOMMENT KAREIN TESTING KE LIYE
+
+                let hasNameErrors = @Json.Serialize(Model.HasNameErrors);
+                let hasInvoiceDates = @Json.Serialize(Model.HasInvoiceDates);
+                let allInvoiceDates = @Json.Serialize(Model.AllInvoiceDates);
+
+                console.log("=== VALIDATION CHECK ===");
+                console.log("- Has Name Errors:", hasNameErrors);
+                console.log("- Has Invoice Dates:", hasInvoiceDates);
+                console.log("- All Invoice Dates:", allInvoiceDates);
+
+                // Check for #NAME? errors
+                // if (hasNameErrors) {
+                //     showValidationError("Please fix all #NAME? errors before converting to PDF.");
+                //     return false;
+                // }
+
+                // Check for invoice date mismatches
+                // if (hasInvoiceDates && allInvoiceDates && allInvoiceDates.length > 0) {
+                //     let hasMismatch = checkInvoiceDateMismatches(allInvoiceDates);
+                //     if (hasMismatch) {
+                //         showValidationError("Please fix Invoice Date mismatches before converting to PDF.");
+                //         return false;
+                //     }
+                // }
+
+                console.log("✅ Validation passed - no errors found");
+                return true;
+            }
+
+            // ✅ Check for Invoice Date mismatches
+            function checkInvoiceDateMismatches(invoiceDates) {
+                console.log("Checking invoice date mismatches...");
+
+                let hasMismatch = false;
+                let dateValues = [];
+
+                // Collect all date values
+                invoiceDates.forEach(invoiceDate => {
+                    if (invoiceDate.dateValue && invoiceDate.dateValue.trim() !== '') {
+                        dateValues.push(invoiceDate.dateValue.trim());
+                    }
+                });
+
+                console.log("Date values found:", dateValues);
+
+                // Check if all dates are same
+                if (dateValues.length > 1) {
+                    let firstDate = dateValues[0];
+                    let allSame = dateValues.every(date => date === firstDate);
+
+                    if (!allSame) {
+                        console.log("❌ Date mismatch found!");
+                        hasMismatch = true;
+
+                        // Show detailed mismatch info
+                        showDateMismatchDetails(invoiceDates);
+                    } else {
+                        console.log("✅ All invoice dates are same");
+                    }
+                } else if (dateValues.length === 1) {
+                    console.log("✅ Only one invoice date found - no mismatch possible");
+                } else {
+                    console.log("ℹ️ No invoice date values found");
+                }
+
+                return hasMismatch;
+            }
+
+            // ✅ Show detailed date mismatch information
+            function showDateMismatchDetails(invoiceDates) {
+                let dateGroups = {};
+
+                invoiceDates.forEach(invoiceDate => {
+                    let dateValue = invoiceDate.dateValue || 'Empty';
+                    if (!dateGroups[dateValue]) {
+                        dateGroups[dateValue] = [];
+                    }
+                    dateGroups[dateValue].push({
+                        sheet: invoiceDate.sheetName,
+                        location: invoiceDate.location,
+                        text: invoiceDate.invoiceDateText
+                    });
+                });
+
+                console.log("Date Groups:", dateGroups);
+            }
+
+            // ✅ Show validation error
+            function showValidationError(message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Failed',
+                    html: `
+                        <div class="text-start">
+                            <h5 class="text-danger mb-3">❌ Cannot Convert to PDF</h5>
+                            <p class="mb-3">${message}</p>
+                            <div class="alert alert-warning border-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Please fix these issues:</strong>
+                                <ul class="mb-0 mt-2">
+                                    ${message.includes('#NAME?') ? '<li>Fix all #NAME? formula errors in Excel file</li>' : ''}
+                                    ${message.includes('Invoice Date') ? '<li>Ensure all Invoice Dates have the same value</li>' : ''}
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#dc3545',
+                    backdrop: true,
+                    allowOutsideClick: false
+                });
+            }
+
+            // =============================================
+            // ✅ VALIDATION CODE END
+            // =============================================
+
+            // ✅ File Names Button Click Handler
+            showFileNamesBtn.addEventListener('click', function() {
+                if (!sessionId) {
+                    showError('Session information not available. Please go back and upload the file again.');
+                    return;
+                }
+
+                showFileNamesBtn.disabled = true;
+                showFileNamesBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+
+                // Call controller method to get file names
+                fetch('@Url.Action("GetFileNames", "Home")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: `sessionId=${sessionId}`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("File names response:", data);
+                    if (data.success) {
+                        displayFileNames(data.data);
+                        showSuccess('File names loaded successfully!');
+                    } else {
+                        showError(data.message || 'Error loading file names');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('Error loading file names: ' + error.message);
+                })
+                .finally(() => {
+                    showFileNamesBtn.disabled = false;
+                    showFileNamesBtn.innerHTML = '<i class="fas fa-list me-2"></i>Show Uploaded Excel and PDF File Names';
+                });
+            });
+
+            // ✅ Display File Names Function
+            function displayFileNames(fileData) {
+                console.log("Displaying file names:", fileData);
+                let html = '';
+
+                // Excel File
+                if (fileData.excelFileName) {
+                    html += `
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-file-excel me-2"></i>Uploaded Excel File
+                            </h6>
+                            <div class="ps-3">
+                                <div class="d-flex align-items-center p-3 bg-light rounded">
+                                    <span class="badge bg-primary me-3 fs-6">EXCEL</span>
+                                    <div>
+                                        <strong class="d-block">${fileData.excelFileName}</strong>
+                                        <small class="text-muted">Will be converted to PDF</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No Excel file information found in session.
+                        </div>
+                    `;
+                }
+
+                // PDF Files
+                if (fileData.pdfFileNames && fileData.pdfFileNames.length > 0) {
+                    html += `
+                        <div class="mb-3">
+                            <h6 class="text-danger mb-3">
+                                <i class="fas fa-file-pdf me-2"></i>Existing PDF Files (${fileData.totalPdfFiles})
+                            </h6>
+                            <div class="ps-3">
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    These PDF files will be merged with the converted Excel file.
+                                </div>
+                    `;
+
+                    fileData.pdfFileNames.forEach((pdfName, index) => {
+                        html += `
+                            <div class="d-flex align-items-center p-2 mb-2 border rounded">
+                                <span class="badge bg-danger me-3">PDF ${index + 1}</span>
+                                <div>
+                                    <strong>${pdfName}</strong>
+                                    <div class="text-muted small">From local PDF directory</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div></div>`;
+                } else {
+                    html += `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No PDF files found in the local directory. Only the converted Excel file will be used.
+                        </div>
+                    `;
+                }
+
+                // Total Files Summary
+                html += `
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <div class="row text-center">
+                            <div class="col">
+                                <h4 class="text-primary mb-1">1</h4>
+                                <small class="text-muted">Excel File</small>
+                            </div>
+                            <div class="col">
+                                <h4 class="text-danger mb-1">${fileData.totalPdfFiles || 0}</h4>
+                                <small class="text-muted">PDF Files</small>
+                            </div>
+                            <div class="col">
+                                <h4 class="text-success mb-1">${(fileData.totalPdfFiles || 0) + 1}</h4>
+                                <small class="text-muted">Total Files</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                fileNamesContent.innerHTML = html;
+                fileNamesSection.style.display = 'block';
+
+                // Smooth scroll to file names section
+                fileNamesSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // ✅ Show Error Function
+            function showError(message) {
+                // Remove existing alerts
+                const existingAlert = document.querySelector('.alert-dismissible');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show mb-4 border-0 shadow-sm';
+                alertDiv.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-circle me-3 fs-4"></i>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-1">Error</h5>
+                            <p class="mb-0">${message}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.card'));
+            }
+
+            // ✅ Show Success Function
+            function showSuccess(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show mb-4 border-0 shadow-sm';
+                alertDiv.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-3 fs-4"></i>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-1">Success</h5>
+                            <p class="mb-0">${message}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.card'));
+
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 3000);
+            }
 
             console.log("Initializing drag and drop...");
 
@@ -415,6 +793,17 @@
                     console.log('Conversion already in progress...');
                     return;
                 }
+
+                // =============================================
+                // ✅ VALIDATION CHECK - YEH NAYA CODE HAI
+                // =============================================
+                console.log("🔄 Running validation checks...");
+                if (!validateBeforeConversion()) {
+                    console.log('❌ Validation failed - stopping conversion');
+                    return;
+                }
+                console.log("✅ Validation passed - proceeding with conversion");
+                // =============================================
 
                 // Get ALL rows in current order (including unchecked ones for proper ordering)
                 const allRows = Array.from(document.querySelectorAll('#sortable tr'));
@@ -597,374 +986,22 @@
             padding: 0.25rem 0.5rem;
             font-size: 0.875rem;
         }
+
+        /* SweetAlert Custom Styling */
+        .swal2-popup {
+            border-radius: 15px !important;
+        }
+
+        .swal2-title {
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
+        }
+
+        .swal2-html-container {
+            text-align: left !important;
+        }
     </style>
 }
-
-
-@*     <!-- Sheet Selection --> *@
-@*     <div class="card border-0 shadow-sm"> *@
-@*         <div class="card-header bg-white py-3 border-bottom"> *@
-@*             <div class="d-flex justify-content-between align-items-center"> *@
-@*                 <h5 class="mb-0"> *@
-@*                     <i class="fas fa-list-check text-primary me-2"></i>Sheet Selection & Ordering *@
-@*                 </h5> *@
-@*                 <div class="d-flex align-items-center gap-2"> *@
-@*                     <div class="form-check"> *@
-@*                         <input class="form-check-input" type="checkbox" id="selectAll" checked> *@
-@*                         <label class="form-check-label small fw-bold" for="selectAll"> *@
-@*                             Select All *@
-@*                         </label> *@
-@*                     </div> *@
-@*                 </div> *@
-@*             </div> *@
-@*         </div> *@
-@*         <div class="card-body p-0"> *@
-@*             <div class="table-responsive"> *@
-@*                 <table class="table table-hover mb-0" id="sheetSelectionTable"> *@
-@*                     <thead class="table-light"> *@
-@*                         <tr> *@
-@*                             <th style="width: 60px;" class="text-center ps-4">#</th> *@
-@*                             <th style="width: 60px;" class="text-center">Select</th> *@
-@*                             <th>Sheet Name</th> *@
-@*                             <th style="width: 150px;" class="text-center">Orientation</th> *@
-@*                             <th style="width: 120px;" class="text-center">#NAME? Errors</th> *@
-@*                             <th style="width: 120px;" class="text-center">Invoice Dates</th> *@
-@*                             <th style="width: 80px;" class="text-center">Action</th> *@
-@*                         </tr> *@
-@*                     </thead> *@
-@*                     <tbody id="sortable"> *@
-@*                         @foreach (var file in Model.FileSelections.OrderBy(f => f.SortOrder)) *@
-@*                         { *@
-@*                             <tr data-sheet="@file.SheetName" data-order="@file.SortOrder" class="sortable-row"> *@
-@*                                 <td class="text-center align-middle ps-4"> *@
-@*                                     <div class="d-flex align-items-center justify-content-center"> *@
-@*                                         <!-- Three Dots Grip Icon --> *@
-@*                                         <div class="drag-handle me-2" style="cursor: grab;"> *@
-@*                                             <i class="fas fa-grip-vertical text-muted"></i> *@
-@*                                         </div> *@
-@*                                         <span class="order-badge badge bg-primary rounded-pill">@(file.SortOrder + 1)</span> *@
-@*                                     </div> *@
-@*                                 </td> *@
-@*                                 <td class="text-center align-middle"> *@
-@*                                     <input type="checkbox" name="selectedSheets" value="@file.SheetName" *@
-@*                                     @(file.IsSelected ? "checked" : "") *@
-@*                                            class="sheet-checkbox form-check-input"> *@
-@*                                 </td> *@
-@*                                 <td class="align-middle"> *@
-@*                                     <div class="d-flex align-items-center"> *@
-@*                                         <i class="fas fa-table text-muted me-2"></i> *@
-@*                                         <strong>@file.SheetName</strong> *@
-@*                                     </div> *@
-@*                                 </td> *@
-@*                                 <td class="text-center align-middle"> *@
-@*                                     <select class="form-select form-select-sm orientation-select" data-sheet="@file.SheetName" style="width: 120px;"> *@
-@*                                         @if (file.SheetName == "AOC" || file.SheetName == "DIFF" || file.SheetName == "FORM B-(Wage Reg.)") *@
-@*                                         { *@
-@*                                             <option value="Portrait" selected>Portrait</option> *@
-@*                                             <option value="Landscape">Landscape</option> *@
-@*                                         } *@
-@*                                         else *@
-@*                                         { *@
-@*                                             <option value="Landscape" selected>Landscape</option> *@
-@*                                             <option value="Portrait">Portrait</option> *@
-@*                                         } *@
-@*                                     </select> *@
-@*                                 </td> *@
-@*                                 <td class="text-center align-middle"> *@
-@*                                     @if (file.HasNameErrors) *@
-@*                                     { *@
-@*                                         <span class="badge bg-danger rounded-pill"> *@
-@*                                             @file.NameErrors.Count *@
-@*                                         </span> *@
-@*                                     } *@
-@*                                     else *@
-@*                                     { *@
-@*                                         <span class="badge bg-success rounded-pill">0</span> *@
-@*                                     } *@
-@*                                 </td> *@
-@*                                 <td class="text-center align-middle"> *@
-@*                                     @if (file.HasInvoiceDates) *@
-@*                                     { *@
-@*                                         <span class="badge bg-success rounded-pill"> *@
-@*                                             @file.InvoiceDates.Count *@
-@*                                         </span> *@
-@*                                     } *@
-@*                                     else *@
-@*                                     { *@
-@*                                         <span class="badge bg-secondary rounded-pill">0</span> *@
-@*                                     } *@
-@*                                 </td> *@
-@*                                 <td class="text-center align-middle"> *@
-@*                                     <button type="button" class="btn btn-sm btn-outline-primary view-sheet" *@
-@*                                             data-sheet="@file.SheetName" data-bs-toggle="tooltip" title="Preview Sheet"> *@
-@*                                         <i class="fas fa-eye"></i> *@
-@*                                     </button> *@
-@*                                 </td> *@
-@*                             </tr> *@
-@*                         } *@
-@*                     </tbody> *@
-@*                 </table> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-
-@*     <!-- Conversion Status --> *@
-@*     <div id="conversionStatus" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"> *@
-@*         <div class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true"> *@
-@*             <div class="d-flex"> *@
-@*                 <div class="toast-body"> *@
-@*                     <i class="fas fa-spinner fa-spin me-2"></i> *@
-@*                     <span id="statusMessage">Converting selected sheets to PDF...</span> *@
-@*                 </div> *@
-@*                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-
-@* @section Scripts { *@
-@*     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script> *@
-@*     <script> *@
-@*         document.addEventListener('DOMContentLoaded', function() { *@
-@*             const sessionId = '@Model.SessionId'; *@
-@*             const convertBtn = document.getElementById('convertBtn'); *@
-@*             const selectAllCheckbox = document.getElementById('selectAll'); *@
-@*             const sheetCheckboxes = document.querySelectorAll('.sheet-checkbox'); *@
-@*             const selectedSheetsCount = document.getElementById('selectedSheetsCount'); *@
-@*             let isConverting = false; *@
-
-@*             console.log("Initializing drag and drop..."); *@
-
-@*             // ✅ Initialize Sortable with proper configuration *@
-@*             const sortableElement = document.getElementById('sortable'); *@
-@*             if (sortableElement) { *@
-@*                 const sortable = new Sortable(sortableElement, { *@
-@*                     handle: '.drag-handle', *@
-@*                     animation: 150, *@
-@*                     ghostClass: 'sortable-ghost', *@
-@*                     chosenClass: 'sortable-chosen', *@
-@*                     dragClass: 'sortable-drag', *@
-@*                     onStart: function(evt) { *@
-@*                         console.log("Drag started for:", evt.item.dataset.sheet); *@
-@*                         evt.item.style.backgroundColor = '#e3f2fd'; *@
-@*                         document.body.style.cursor = 'grabbing'; *@
-@*                     }, *@
-@*                     onEnd: function(evt) { *@
-@*                         console.log("Drag ended. Item moved from", evt.oldIndex, "to", evt.newIndex); *@
-@*                         evt.item.style.backgroundColor = ''; *@
-@*                         document.body.style.cursor = ''; *@
-@*                         updateOrderNumbers(); *@
-@*                         updateSelectedCount(); *@
-
-@*                         const sheets = Array.from(document.querySelectorAll('#sortable tr')) *@
-@*                             .map(row => row.dataset.sheet); *@
-@*                         console.log("New sheet order:", sheets); *@
-@*                     } *@
-@*                 }); *@
-@*                 console.log("✅ Sortable initialized with grip handle"); *@
-@*             } *@
-
-@*             // Select All functionality *@
-@*             selectAllCheckbox.addEventListener('change', function() { *@
-@*                 const isChecked = this.checked; *@
-@*                 sheetCheckboxes.forEach(checkbox => { *@
-@*                     checkbox.checked = isChecked; *@
-@*                 }); *@
-@*                 updateSelectedCount(); *@
-@*             }); *@
-
-@*             // Individual checkbox change *@
-@*             sheetCheckboxes.forEach(checkbox => { *@
-@*                 checkbox.addEventListener('change', updateSelectedCount); *@
-@*             }); *@
-
-@*             // Update order numbers based on current position *@
-@*             function updateOrderNumbers() { *@
-@*                 const rows = document.querySelectorAll('#sortable tr'); *@
-@*                 console.log(`Updating order numbers for ${rows.length} rows`); *@
-@*                 rows.forEach((row, index) => { *@
-@*                     const badge = row.querySelector('.order-badge'); *@
-@*                     if (badge) { *@
-@*                         badge.textContent = index + 1; *@
-@*                         row.setAttribute('data-order', index); *@
-@*                     } *@
-@*                 }); *@
-@*             } *@
-
-@*             // Update selected count *@
-@*             function updateSelectedCount() { *@
-@*                 const selectedCount = document.querySelectorAll('.sheet-checkbox:checked').length; *@
-@*                 selectedSheetsCount.textContent = selectedCount; *@
-@*                 const totalCheckboxes = sheetCheckboxes.length; *@
-@*                 selectAllCheckbox.checked = selectedCount === totalCheckboxes; *@
-@*                 selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < totalCheckboxes; *@
-@*             } *@
-
-@*             // Convert button click - FIXED VERSION *@
-@*             convertBtn.addEventListener('click', function() { *@
-@*                 if (isConverting) { *@
-@*                     console.log('Conversion already in progress...'); *@
-@*                     return; *@
-@*                 } *@
-
-@*                 const selectedSheets = Array.from(document.querySelectorAll('.sheet-checkbox:checked')) *@
-@*                     .map(cb => cb.value); *@
-
-@*                 if (selectedSheets.length === 0) { *@
-@*                     alert('Please select at least one sheet to convert.'); *@
-@*                     return; *@
-@*                 } *@
-
-@*                 // Get sheet order and orientations in correct format *@
-@*                 const sheetOrders = []; *@
-@*                 const sheetOrientations = []; *@
-
-@*                 const rows = document.querySelectorAll('#sortable tr'); *@
-@*                 rows.forEach((row, index) => { *@
-@*                     const sheetName = row.getAttribute('data-sheet'); *@
-@*                     if (selectedSheets.includes(sheetName)) { *@
-@*                         sheetOrders.push(index); // Current position in the sorted list *@
-
-@*                         const orientationSelect = row.querySelector('.orientation-select'); *@
-@*                         if (orientationSelect) { *@
-@*                             sheetOrientations.push(orientationSelect.value); *@
-@*                         } else { *@
-@*                             sheetOrientations.push('Landscape'); // Default *@
-@*                         } *@
-@*                     } *@
-@*                 }); *@
-
-@*                 console.log("Selected sheets for conversion:", selectedSheets); *@
-@*                 console.log("Sheet orders:", sheetOrders); *@
-@*                 console.log("Sheet orientations:", sheetOrientations); *@
-
-@*                 isConverting = true; *@
-@*                 const btn = this; *@
-@*                 const originalText = btn.innerHTML; *@
-@*                 btn.disabled = true; *@
-@*                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Converting...'; *@
-
-@*                 // Show conversion status *@
-@*                 const toastElement = document.querySelector('.toast'); *@
-@*                 if (toastElement) { *@
-@*                     const toast = new bootstrap.Toast(toastElement); *@
-@*                     toast.show(); *@
-@*                 } *@
-
-@*                 // Create form and submit with correct data *@
-@*                 const form = document.createElement('form'); *@
-@*                 form.method = 'POST'; *@
-@*                 form.action = '@Url.Action("ConvertToPdf")'; *@
-
-@*                 // Add session ID *@
-@*                 const sessionIdInput = document.createElement('input'); *@
-@*                 sessionIdInput.type = 'hidden'; *@
-@*                 sessionIdInput.name = 'sessionId'; *@
-@*                 sessionIdInput.value = sessionId; *@
-@*                 form.appendChild(sessionIdInput); *@
-
-@*                 // Add selected sheets with their order and orientation *@
-@*                 selectedSheets.forEach((sheet, index) => { *@
-@*                     // Selected sheets *@
-@*                     const sheetInput = document.createElement('input'); *@
-@*                     sheetInput.type = 'hidden'; *@
-@*                     sheetInput.name = 'selectedSheets'; *@
-@*                     sheetInput.value = sheet; *@
-@*                     form.appendChild(sheetInput); *@
-
-@*                     // Sheet orders *@
-@*                     const orderInput = document.createElement('input'); *@
-@*                     orderInput.type = 'hidden'; *@
-@*                     orderInput.name = 'sheetOrders'; *@
-@*                     orderInput.value = sheetOrders[index]; *@
-@*                     form.appendChild(orderInput); *@
-
-@*                     // Sheet orientations *@
-@*                     const orientationInput = document.createElement('input'); *@
-@*                     orientationInput.type = 'hidden'; *@
-@*                     orientationInput.name = 'sheetOrientations'; *@
-@*                     orientationInput.value = sheetOrientations[index]; *@
-@*                     form.appendChild(orientationInput); *@
-@*                 }); *@
-
-@*                 // Add anti-forgery token *@
-@*                 const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]'); *@
-@*                 if (antiForgeryToken) { *@
-@*                     form.appendChild(antiForgeryToken.cloneNode(true)); *@
-@*                 } *@
-
-@*                 document.body.appendChild(form); *@
-@*                 console.log("Submitting form with:", selectedSheets.length, "selected sheets"); *@
-
-@*                 // Submit the form *@
-@*                 form.submit(); *@
-
-@*                 // Fallback timeout *@
-@*                 setTimeout(() => { *@
-@*                     if (isConverting) { *@
-@*                         resetButtonState(btn, originalText); *@
-@*                     } *@
-@*                 }, 60000); // 1 minute timeout *@
-@*             }); *@
-
-@*             function resetButtonState(btn, originalText) { *@
-@*                 isConverting = false; *@
-@*                 btn.disabled = false; *@
-@*                 btn.innerHTML = originalText; *@
-@*             } *@
-
-@*             // Initialize *@
-@*             updateOrderNumbers(); *@
-@*             updateSelectedCount(); *@
-@*             console.log("✅ Sheet selection and drag & drop initialized successfully"); *@
-@*         }); *@
-@*     </script> *@
-
-@*     <style> *@
-@*         .text-gradient { *@
-@*             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); *@
-@*             -webkit-background-clip: text; *@
-@*             -webkit-text-fill-color: transparent; *@
-@*             background-clip: text; *@
-@*         } *@
-
-@*         .sortable-ghost { *@
-@*             opacity: 0.6; *@
-@*             background: #c8dbf0 !important; *@
-@*             border: 2px dashed #2196f3 !important; *@
-@*         } *@
-
-@*         .sortable-chosen { *@
-@*             background-color: #e3f2fd !important; *@
-@*             transform: rotate(2deg); *@
-@*             box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important; *@
-@*         } *@
-
-@*         .sortable-drag { *@
-@*             opacity: 0.9; *@
-@*             transform: rotate(5deg); *@
-@*             box-shadow: 0 8px 20px rgba(0,0,0,0.3) !important; *@
-@*         } *@
-
-@*         .drag-handle { *@
-@*             cursor: grab !important; *@
-@*             transition: all 0.2s ease; *@
-@*             padding: 4px 2px; *@
-@*             border-radius: 3px; *@
-@*         } *@
-
-@*             .drag-handle:hover { *@
-@*                 background-color: rgba(33, 150, 243, 0.1); *@
-@*                 color: #2196f3 !important; *@
-@*             } *@
-
-@*             .drag-handle:active { *@
-@*                 cursor: grabbing !important; *@
-@*                 background-color: rgba(33, 150, 243, 0.2); *@
-@*             } *@
-@*     </style> *@
-@* } *@
-
 
 
 
@@ -973,8 +1010,12 @@
 @* @{ *@
 @*     ViewData["Title"] = "Preview - " + Model.OriginalFileName; *@
 @* } *@
-
+@* @Html.AntiForgeryToken() *@
 @* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> *@
+
+@* <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"> *@
+@* <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> *@
+
 @* <div class="container-fluid px-4"> *@
 @*     <!-- Header --> *@
 @*     <div class="d-flex justify-content-between align-items-center py-4 mb-4 border-bottom"> *@
@@ -989,6 +1030,11 @@
 @*             <p class="text-muted mb-0">Review and select sheets for PDF conversion</p> *@
 @*         </div> *@
 @*         <div class="d-flex gap-2"> *@
+
+@*             <button type="button" id="showFileNamesBtn" class="btn btn-info px-4"> *@
+@*                 <i class="fas fa-list me-2"></i>Show File Names *@
+@*             </button> *@
+
 @*             <a href="@Url.Action("Index")" class="btn btn-outline-secondary"> *@
 @*                 <i class="fas fa-arrow-left me-2"></i>Back *@
 @*             </a> *@
@@ -997,6 +1043,23 @@
 @*             </button> *@
 @*         </div> *@
 @*     </div> *@
+
+@*     <!-- ✅ File Names Display Section --> *@
+@*     <div id="fileNamesSection" class="mb-4" style="display: none;"> *@
+@*         <div class="card border-0 shadow-sm"> *@
+@*             <div class="card-header bg-info text-white"> *@
+@*                 <h5 class="mb-0"> *@
+@*                     <i class="fas fa-file me-2"></i>File Names *@
+@*                 </h5> *@
+@*             </div> *@
+@*             <div class="card-body"> *@
+@*                 <div id="fileNamesContent"> *@
+@*                     <!-- File names yahan display honge --> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+
 
 @*     <!-- Summary Cards --> *@
 @*     <div class="row g-4 mb-4"> *@
@@ -1084,7 +1147,7 @@
 @*     @if (Model.HasInvoiceDates) *@
 @*     { *@
 @*         <div class="card border-0 shadow-sm mb-4"> *@
-@*             <div class="card-header bg-success text-white"> *@
+@*             <div class="card-header  bg-danger text-white"> *@
 @*                 <h5 class="mb-0"> *@
 @*                     <i class="fas fa-calendar-check me-2"></i>Invoice Dates Found (@Model.AllInvoiceDates.Count) *@
 @*                 </h5> *@
@@ -1114,7 +1177,7 @@
 @*                                     <td>@(counter++)</td> *@
 @*                                     <td><strong>@invoiceDate.SheetName</strong></td> *@
 @*                                     <td><code>@invoiceDate.InvoiceDateText</code></td> *@
-@*                                     <td><strong class="text-primary">@invoiceDate.DateValue</strong></td> *@
+@*                                     <td><strong class="text-danger">@invoiceDate.DateValue</strong></td> *@
 @*                                     <td><code>@invoiceDate.Location</code></td> *@
 @*                                 </tr> *@
 @*                             } *@
@@ -1131,6 +1194,7 @@
 @*             Console showed: Credit Note (1), Tax Invoice (1), AOC (1), working sheet (1) *@
 @*         </div> *@
 @*     } *@
+
 
 @*     <!-- Sheet Selection --> *@
 @*     <div class="card border-0 shadow-sm"> *@
@@ -1169,7 +1233,6 @@
 @*                             <tr data-sheet="@file.SheetName" data-order="@file.SortOrder" class="sortable-row"> *@
 @*                                 <td class="text-center align-middle ps-4"> *@
 @*                                     <div class="d-flex align-items-center justify-content-center"> *@
-@*                                         <!-- Three Dots Grip Icon --> *@
 @*                                         <div class="drag-handle me-2" style="cursor: grab;"> *@
 @*                                             <i class="fas fa-grip-vertical text-muted"></i> *@
 @*                                         </div> *@
@@ -1189,17 +1252,65 @@
 @*                                 </td> *@
 @*                                 <td class="text-center align-middle"> *@
 @*                                     <select class="form-select form-select-sm orientation-select" data-sheet="@file.SheetName" style="width: 120px;"> *@
-@*                                         @if (file.SheetName == "AOC" || file.SheetName == "DIFF" || file.SheetName == "FORM B-(Wage Reg.)") *@
-@*                                         { *@
-@*                                             <option value="Portrait" selected>Portrait</option> *@
-@*                                             <option value="Landscape">Landscape</option> *@
-@*                                         } *@
-@*                                         else *@
-@*                                         { *@
-@*                                             <option value="Landscape" selected>Landscape</option> *@
-@*                                             <option value="Portrait">Portrait</option> *@
+@*                                         @{ *@
+@*                                             // Default orientations based on sheet position and type *@
+@*                                             var isPortraitByDefault = false; *@
+@*                                             var isLandscapeByDefault = false; *@
+@*                                             var shouldRotate = file.SheetName.Contains("AOC", StringComparison.OrdinalIgnoreCase) || *@
+@*                                             file.SheetName.Contains("DIFF", StringComparison.OrdinalIgnoreCase) || *@
+@*                                             file.SheetName.Contains("FORM B", StringComparison.OrdinalIgnoreCase); *@
+
+@*                                             // Set defaults based on your requirements *@
+@*                                             if (file.SortOrder == 0 || file.SortOrder == 1 || file.SortOrder == 2 || file.SortOrder == 5) // 1st, 2nd, 3rd, 6th *@
+@*                                             { *@
+@*                                                 isPortraitByDefault = true; *@
+@*                                             } *@
+@*                                             else if (file.SortOrder == 3 || file.SortOrder == 4 || file.SortOrder == 6 || file.SortOrder == 7) // 4th, 5th, 7th, 8th *@
+@*                                             { *@
+@*                                                 isLandscapeByDefault = true; *@
+@*                                             } *@
+@*                                             else *@
+@*                                             { *@
+@*                                                 isPortraitByDefault = true; // Default for others *@
+@*                                             } *@
+
+@*                                             // Special handling for AOC and similar sheets *@
+@*                                             if (shouldRotate) *@
+@*                                             { *@
+@*                                                 if (isPortraitByDefault) *@
+@*                                                 { *@
+@*                                                     <option value="Portrait" selected>Portrait (90° Rotate)</option> *@
+@*                                                     <option value="Landscape">Landscape</option> *@
+@*                                                 } *@
+@*                                                 else *@
+@*                                                 { *@
+@*                                                     <option value="Portrait">Portrait (90° Rotate)</option> *@
+@*                                                     <option value="Landscape" selected>Landscape</option> *@
+@*                                                 } *@
+@*                                             } *@
+@*                                             else if (isPortraitByDefault) *@
+@*                                             { *@
+@*                                                 <option value="Portrait" selected>Portrait</option> *@
+@*                                                 <option value="Landscape">Landscape</option> *@
+@*                                             } *@
+@*                                             else if (isLandscapeByDefault) *@
+@*                                             { *@
+@*                                                 <option value="Landscape" selected>Landscape</option> *@
+@*                                                 <option value="Portrait">Portrait</option> *@
+@*                                             } *@
+@*                                             else *@
+@*                                             { *@
+@*                                                 <option value="Portrait" selected>Portrait</option> *@
+@*                                                 <option value="Landscape">Landscape</option> *@
+@*                                             } *@
 @*                                         } *@
 @*                                     </select> *@
+@*                                     @if (shouldRotate) *@
+@*                                     { *@
+@*                                         <div class="text-warning small mt-1"> *@
+@*                                             <i class="fas fa-sync-alt"></i> Auto-rotates 90° in Portrait *@
+@*                                         </div> *@
+@*                                     } *@
 @*                                 </td> *@
 @*                                 <td class="text-center align-middle"> *@
 @*                                     @if (file.HasNameErrors) *@
@@ -1264,50 +1375,232 @@
 @*             const selectedSheetsCount = document.getElementById('selectedSheetsCount'); *@
 @*             let isConverting = false; *@
 
+
+@*            // ✅ YEH VARIABLES ADD KAREIN - Ye missing the *@
+@*             const showFileNamesBtn = document.getElementById('showFileNamesBtn'); *@
+@*             const fileNamesSection = document.getElementById('fileNamesSection'); *@
+@*             const fileNamesContent = document.getElementById('fileNamesContent'); *@
+
+
+@*             console.log("Session ID for file names:", sessionId); *@
+
+@*             // ✅ File Names Button Click Handler *@
+@*             showFileNamesBtn.addEventListener('click', function() { *@
+@*                 if (!sessionId) { *@
+@*                     showError('Session information not available. Please go back and upload the file again.'); *@
+@*                     return; *@
+@*                 } *@
+
+@*                 showFileNamesBtn.disabled = true; *@
+@*                 showFileNamesBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...'; *@
+
+@*                 // Call controller method to get file names *@
+@*                 fetch('@Url.Action("GetFileNames", "Home")', { *@
+@*                     method: 'POST', *@
+@*                     headers: { *@
+@*                         'Content-Type': 'application/x-www-form-urlencoded', *@
+@*                         'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value *@
+@*                     }, *@
+@*                     body: `sessionId=${sessionId}` *@
+@*                 }) *@
+@*                 .then(response => { *@
+@*                     if (!response.ok) { *@
+@*                         throw new Error('Network response was not ok'); *@
+@*                     } *@
+@*                     return response.json(); *@
+@*                 }) *@
+@*                 .then(data => { *@
+@*                     console.log("File names response:", data); *@
+@*                     if (data.success) { *@
+@*                         displayFileNames(data.data); *@
+@*                         showSuccess('File names loaded successfully!'); *@
+@*                     } else { *@
+@*                         showError(data.message || 'Error loading file names'); *@
+@*                     } *@
+@*                 }) *@
+@*                 .catch(error => { *@
+@*                     console.error('Error:', error); *@
+@*                     showError('Error loading file names: ' + error.message); *@
+@*                 }) *@
+@*                 .finally(() => { *@
+@*                     showFileNamesBtn.disabled = false; *@
+@*                     showFileNamesBtn.innerHTML = '<i class="fas fa-list me-2"></i>Show Uploaded Excel and PDF File Names'; *@
+@*                 }); *@
+@*             }); *@
+
+@*             // ✅ Display File Names Function *@
+@*             function displayFileNames(fileData) { *@
+@*                 console.log("Displaying file names:", fileData); *@
+@*                 let html = ''; *@
+
+@*                 // Excel File *@
+@*                 if (fileData.excelFileName) { *@
+@*                     html += ` *@
+@*                         <div class="mb-4"> *@
+@*                             <h6 class="text-primary mb-3"> *@
+@*                                 <i class="fas fa-file-excel me-2"></i>Uploaded Excel File *@
+@*                             </h6> *@
+@*                             <div class="ps-3"> *@
+@*                                 <div class="d-flex align-items-center p-3 bg-light rounded"> *@
+@*                                     <span class="badge bg-primary me-3 fs-6">EXCEL</span> *@
+@*                                     <div> *@
+@*                                         <strong class="d-block">${fileData.excelFileName}</strong> *@
+@*                                         <small class="text-muted">Will be converted to PDF</small> *@
+@*                                     </div> *@
+@*                                 </div> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                     `; *@
+@*                 } else { *@
+@*                     html += ` *@
+@*                         <div class="alert alert-warning"> *@
+@*                             <i class="fas fa-exclamation-triangle me-2"></i> *@
+@*                             No Excel file information found in session. *@
+@*                         </div> *@
+@*                     `; *@
+@*                 } *@
+
+@*                 // PDF Files *@
+@*                 if (fileData.pdfFileNames && fileData.pdfFileNames.length > 0) { *@
+@*                     html += ` *@
+@*                         <div class="mb-3"> *@
+@*                             <h6 class="text-danger mb-3"> *@
+@*                                 <i class="fas fa-file-pdf me-2"></i>Existing PDF Files (${fileData.totalPdfFiles}) *@
+@*                             </h6> *@
+@*                             <div class="ps-3"> *@
+@*                                 <div class="alert alert-info mb-3"> *@
+@*                                     <i class="fas fa-info-circle me-2"></i> *@
+@*                                     These PDF files will be merged with the converted Excel file. *@
+@*                                 </div> *@
+@*                     `; *@
+
+@*                     fileData.pdfFileNames.forEach((pdfName, index) => { *@
+@*                         html += ` *@
+@*                             <div class="d-flex align-items-center p-2 mb-2 border rounded"> *@
+@*                                 <span class="badge bg-danger me-3">PDF ${index + 1}</span> *@
+@*                                 <div> *@
+@*                                     <strong>${pdfName}</strong> *@
+@*                                     <div class="text-muted small">From local PDF directory</div> *@
+@*                                 </div> *@
+@*                             </div> *@
+@*                         `; *@
+@*                     }); *@
+
+@*                     html += `</div></div>`; *@
+@*                 } else { *@
+@*                     html += ` *@
+@*                         <div class="alert alert-warning"> *@
+@*                             <i class="fas fa-exclamation-triangle me-2"></i> *@
+@*                             No PDF files found in the local directory. Only the converted Excel file will be used. *@
+@*                         </div> *@
+@*                     `; *@
+@*                 } *@
+
+@*                 // Total Files Summary *@
+@*                 html += ` *@
+@*                     <div class="mt-4 p-3 bg-light rounded"> *@
+@*                         <div class="row text-center"> *@
+@*                             <div class="col"> *@
+@*                                 <h4 class="text-primary mb-1">1</h4> *@
+@*                                 <small class="text-muted">Excel File</small> *@
+@*                             </div> *@
+@*                             <div class="col"> *@
+@*                                 <h4 class="text-danger mb-1">${fileData.totalPdfFiles || 0}</h4> *@
+@*                                 <small class="text-muted">PDF Files</small> *@
+@*                             </div> *@
+@*                             <div class="col"> *@
+@*                                 <h4 class="text-success mb-1">${(fileData.totalPdfFiles || 0) + 1}</h4> *@
+@*                                 <small class="text-muted">Total Files</small> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                 `; *@
+
+@*                 fileNamesContent.innerHTML = html; *@
+@*                 fileNamesSection.style.display = 'block'; *@
+
+@*                 // Smooth scroll to file names section *@
+@*                 fileNamesSection.scrollIntoView({ behavior: 'smooth' }); *@
+@*             } *@
+
+@*             // ✅ Show Error Function *@
+@*             function showError(message) { *@
+@*                 // Remove existing alerts *@
+@*                 const existingAlert = document.querySelector('.alert-dismissible'); *@
+@*                 if (existingAlert) { *@
+@*                     existingAlert.remove(); *@
+@*                 } *@
+
+@*                 const alertDiv = document.createElement('div'); *@
+@*                 alertDiv.className = 'alert alert-danger alert-dismissible fade show mb-4 border-0 shadow-sm'; *@
+@*                 alertDiv.innerHTML = ` *@
+@*                     <div class="d-flex align-items-center"> *@
+@*                         <i class="fas fa-exclamation-circle me-3 fs-4"></i> *@
+@*                         <div class="flex-grow-1"> *@
+@*                             <h5 class="alert-heading mb-1">Error</h5> *@
+@*                             <p class="mb-0">${message}</p> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button> *@
+@*                 `; *@
+
+@*                 document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.card')); *@
+@*             } *@
+
+@*             // ✅ Show Success Function *@
+@*             function showSuccess(message) { *@
+@*                 const alertDiv = document.createElement('div'); *@
+@*                 alertDiv.className = 'alert alert-success alert-dismissible fade show mb-4 border-0 shadow-sm'; *@
+@*                 alertDiv.innerHTML = ` *@
+@*                     <div class="d-flex align-items-center"> *@
+@*                         <i class="fas fa-check-circle me-3 fs-4"></i> *@
+@*                         <div class="flex-grow-1"> *@
+@*                             <h5 class="alert-heading mb-1">Success</h5> *@
+@*                             <p class="mb-0">${message}</p> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button> *@
+@*                 `; *@
+
+@*                 document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.card')); *@
+
+@*                 // Auto remove after 3 seconds *@
+@*                 setTimeout(() => { *@
+@*                     if (alertDiv.parentNode) { *@
+@*                         alertDiv.remove(); *@
+@*                     } *@
+@*                 }, 3000); *@
+@*             } *@
+
 @*             console.log("Initializing drag and drop..."); *@
 
 @*             // ✅ Initialize Sortable with proper configuration *@
 @*             const sortableElement = document.getElementById('sortable'); *@
-
 @*             if (sortableElement) { *@
 @*                 const sortable = new Sortable(sortableElement, { *@
-@*                     handle: '.drag-handle', // Use the grip icon as handle *@
+@*                     handle: '.drag-handle', *@
 @*                     animation: 150, *@
 @*                     ghostClass: 'sortable-ghost', *@
 @*                     chosenClass: 'sortable-chosen', *@
 @*                     dragClass: 'sortable-drag', *@
-@*                     filter: '.ignore-elements', *@
-@*                     preventOnFilter: false, *@
-
 @*                     onStart: function(evt) { *@
 @*                         console.log("Drag started for:", evt.item.dataset.sheet); *@
 @*                         evt.item.style.backgroundColor = '#e3f2fd'; *@
-@*                         // Change cursor to grabbing *@
 @*                         document.body.style.cursor = 'grabbing'; *@
 @*                     }, *@
-
 @*                     onEnd: function(evt) { *@
 @*                         console.log("Drag ended. Item moved from", evt.oldIndex, "to", evt.newIndex); *@
 @*                         evt.item.style.backgroundColor = ''; *@
 @*                         document.body.style.cursor = ''; *@
-
 @*                         updateOrderNumbers(); *@
 @*                         updateSelectedCount(); *@
 
-@*                         // Log new order for debugging *@
 @*                         const sheets = Array.from(document.querySelectorAll('#sortable tr')) *@
 @*                             .map(row => row.dataset.sheet); *@
 @*                         console.log("New sheet order:", sheets); *@
-@*                     }, *@
-
-@*                     onChoose: function(evt) { *@
-@*                         console.log("Element chosen for dragging"); *@
 @*                     } *@
 @*                 }); *@
-
 @*                 console.log("✅ Sortable initialized with grip handle"); *@
-@*             } else { *@
-@*                 console.error("❌ Sortable element not found"); *@
 @*             } *@
 
 @*             // Select All functionality *@
@@ -1328,7 +1621,6 @@
 @*             function updateOrderNumbers() { *@
 @*                 const rows = document.querySelectorAll('#sortable tr'); *@
 @*                 console.log(`Updating order numbers for ${rows.length} rows`); *@
-
 @*                 rows.forEach((row, index) => { *@
 @*                     const badge = row.querySelector('.order-badge'); *@
 @*                     if (badge) { *@
@@ -1336,62 +1628,142 @@
 @*                         row.setAttribute('data-order', index); *@
 @*                     } *@
 @*                 }); *@
-
-@*                 // Debug: Show current order *@
-@*                 const orders = Array.from(rows).map(row => row.querySelector('.order-badge')?.textContent); *@
-@*                 console.log("Current orders:", orders); *@
 @*             } *@
 
 @*             // Update selected count *@
 @*             function updateSelectedCount() { *@
 @*                 const selectedCount = document.querySelectorAll('.sheet-checkbox:checked').length; *@
 @*                 selectedSheetsCount.textContent = selectedCount; *@
-
 @*                 const totalCheckboxes = sheetCheckboxes.length; *@
 @*                 selectAllCheckbox.checked = selectedCount === totalCheckboxes; *@
 @*                 selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < totalCheckboxes; *@
 @*             } *@
 
-@*             // View sheet button *@
-@*             document.querySelectorAll('.view-sheet').forEach(btn => { *@
-@*                 btn.addEventListener('click', function() { *@
-@*                     const sheetName = this.getAttribute('data-sheet'); *@
-@*                     alert('Preview functionality for: ' + sheetName); *@
-@*                 }); *@
-@*             }); *@
-
-@*             // Convert button click *@
-@*             convertBtn.addEventListener('click', function() { *@
+@*             // Convert button click - Complete version with order and orientation *@
+@*             convertBtn.addEventListener('click', function(e) { *@
+@*                 e.preventDefault(); *@
 @*                 if (isConverting) { *@
 @*                     console.log('Conversion already in progress...'); *@
 @*                     return; *@
 @*                 } *@
 
-@*                 const selectedSheets = Array.from(document.querySelectorAll('.sheet-checkbox:checked')) *@
-@*                     .map(cb => cb.value); *@
 
-@*                 if (selectedSheets.length === 0) { *@
+
+
+
+
+
+
+@*                 // 1. #NAME? Error Check *@
+@*             // const nameErrorCount = @Model.AllNameErrors.Count; *@
+@*             // if (nameErrorCount > 0) { *@
+@*             //     Swal.fire({ *@
+@*             //         icon: 'error', *@
+@*             //         title: 'Cannot Convert!', *@
+@*             //         html: ` *@
+@*             //             <p class="mb-3"><strong>#NAME? Errors Found!</strong></p> *@
+@*             //             <p><strong class="text-danger">${nameErrorCount}</strong> formula errors detected.</p> *@
+@*             //             <p class="text-muted small">Please fix all #NAME? errors in Excel and upload again.</p> *@
+@*             //         `, *@
+@*             //         confirmButtonText: 'OK', *@
+@*             //         confirmButtonColor: '#dc3545' *@
+@*             //     }); *@
+@*             //     return; *@
+@*             // } *@
+
+@*                   // 2. Invoice Date Validation - FULLY SAFE *@
+@*         const rawDates = @Html.Raw(Json.Serialize(Model.AllInvoiceDates)); *@
+
+@*         // Sirf valid dates wale filter karo *@
+@*         const validDates = rawDates *@
+@*             .map(d => ({ *@
+@*                 Sheet: d.SheetName, *@
+@*                 Date: (d.DateValue || '').trim() *@
+@*             })) *@
+@*             .filter(d => d.Date !== '');  // Blank dates hata do *@
+
+@*         // Agar koi valid date nahi mili *@
+@*         // if (validDates.length === 0) { *@
+@*         //     Swal.fire({ *@
+@*         //         icon: 'warning', *@
+@*         //         title: 'No Valid Invoice Date!', *@
+@*         //         text: 'At least one sheet must have a proper date next to "INVOICE DATE".', *@
+@*         //         confirmButtonText: 'OK' *@
+@*         //     }); *@
+@*         //     return; *@
+@*         // } *@
+
+@*         // Sab dates same hain ya nahi? *@
+@*         const firstDate = validDates[0].Date; *@
+@*         const mismatched = validDates.filter(d => d.Date !== firstDate); *@
+
+@*         if (mismatched.length > 0) { *@
+@*             let list = ''; *@
+@*             validDates.forEach(d => { *@
+@*                 const color = d.Date === firstDate ? 'text-success' : 'text-danger fw-bold'; *@
+@*                 list += `<li><strong>${d.Sheet}</strong> → <span class="${color}">${d.Date}</span></li>`; *@
+@*             }); *@
+
+@*             Swal.fire({ *@
+@*                 icon: 'error', *@
+@*                 title: 'Invoice Date Mismatch!', *@
+@*                 html: ` *@
+@*                     <p>All sheets must have the <strong>same invoice date</strong>.</p> *@
+@*                     <p class="mb-2"><strong>Expected:</strong> <span class="text-primary fw-bold">${firstDate}</span></p> *@
+@*                     <ul class="text-start mb-0">${list}</ul> *@
+@*                     <p class="text-muted small mt-3">Please correct the dates and try again.</p> *@
+@*                 `, *@
+@*                 confirmButtonText: 'Fix Dates', *@
+@*                 confirmButtonColor: '#dc3545', *@
+@*                 width: '650px' *@
+@*             }); *@
+@*             return; *@
+@*         } *@
+
+
+
+
+
+
+@*                 // Get ALL rows in current order (including unchecked ones for proper ordering) *@
+@*                 const allRows = Array.from(document.querySelectorAll('#sortable tr')); *@
+
+@*                 // Filter only checked sheets but maintain the drag & drop order *@
+@*                 const selectedRows = allRows.filter(row => { *@
+@*                     const checkbox = row.querySelector('.sheet-checkbox'); *@
+@*                     return checkbox.checked; *@
+@*                 }); *@
+
+@*                 if (selectedRows.length === 0) { *@
 @*                     alert('Please select at least one sheet to convert.'); *@
 @*                     return; *@
 @*                 } *@
 
-@*                 // Get sheet order and orientations *@
-@*                 const sheetOrders = {}; *@
-@*                 const sheetOrientations = {}; *@
+@*                 // Extract data in the correct order *@
+@*                 const selectedSheets = []; *@
+@*                 const sheetOrders = []; *@
+@*                 const sheetOrientations = []; *@
 
-@*                 const rows = document.querySelectorAll('#sortable tr'); *@
-@*                 rows.forEach((row, index) => { *@
+@*                 selectedRows.forEach((row, index) => { *@
 @*                     const sheetName = row.getAttribute('data-sheet'); *@
-@*                     sheetOrders[sheetName] = index; *@
-
+@*                     const order = index; // This maintains the drag & drop order *@
 @*                     const orientationSelect = row.querySelector('.orientation-select'); *@
-@*                     if (orientationSelect) { *@
-@*                         sheetOrientations[sheetName] = orientationSelect.value; *@
-@*                     } *@
+@*                     const orientation = orientationSelect ? orientationSelect.value : 'Landscape'; *@
+
+@*                     selectedSheets.push(sheetName); *@
+@*                     sheetOrders.push(order); *@
+@*                     sheetOrientations.push(orientation); *@
 @*                 }); *@
 
-@*                 console.log("Sheet orders for conversion:", sheetOrders); *@
-@*                 console.log("Sheet orientations for conversion:", sheetOrientations); *@
+@*                 console.log("=== CONVERSION DATA ==="); *@
+@*                 console.log("Selected sheets in order:", selectedSheets); *@
+@*                 console.log("Sheet orders:", sheetOrders); *@
+@*                 console.log("Sheet orientations:", sheetOrientations); *@
+
+@*                 // Show detailed info *@
+@*                 selectedSheets.forEach((sheet, index) => { *@
+@*                     console.log(`📄 ${index + 1}. ${sheet} - ${sheetOrientations[index]}`); *@
+@*                 }); *@
 
 @*                 isConverting = true; *@
 @*                 const btn = this; *@
@@ -1406,59 +1778,60 @@
 @*                     toast.show(); *@
 @*                 } *@
 
-@*                 // Create form and submit *@
+@*                 // Create form and submit with correct data *@
 @*                 const form = document.createElement('form'); *@
 @*                 form.method = 'POST'; *@
 @*                 form.action = '@Url.Action("ConvertToPdf")'; *@
 
+@*                 // Add session ID *@
 @*                 const sessionIdInput = document.createElement('input'); *@
 @*                 sessionIdInput.type = 'hidden'; *@
 @*                 sessionIdInput.name = 'sessionId'; *@
 @*                 sessionIdInput.value = sessionId; *@
+@*                 form.appendChild(sessionIdInput); *@
 
 @*                 // Add selected sheets with their order and orientation *@
-@*                 selectedSheets.forEach(sheet => { *@
-@*                     const input = document.createElement('input'); *@
-@*                     input.type = 'hidden'; *@
-@*                     input.name = 'selectedSheets'; *@
-@*                     input.value = sheet; *@
-@*                     form.appendChild(input); *@
+@*                 selectedSheets.forEach((sheet, index) => { *@
+@*                     // Selected sheets *@
+@*                     const sheetInput = document.createElement('input'); *@
+@*                     sheetInput.type = 'hidden'; *@
+@*                     sheetInput.name = 'selectedSheets'; *@
+@*                     sheetInput.value = sheet; *@
+@*                     form.appendChild(sheetInput); *@
 
+@*                     // Sheet orders (maintain drag & drop order) *@
 @*                     const orderInput = document.createElement('input'); *@
 @*                     orderInput.type = 'hidden'; *@
 @*                     orderInput.name = 'sheetOrders'; *@
-@*                     orderInput.value = sheetOrders[sheet] || '0'; *@
+@*                     orderInput.value = sheetOrders[index]; *@
 @*                     form.appendChild(orderInput); *@
 
+@*                     // Sheet orientations *@
 @*                     const orientationInput = document.createElement('input'); *@
 @*                     orientationInput.type = 'hidden'; *@
 @*                     orientationInput.name = 'sheetOrientations'; *@
-@*                     orientationInput.value = sheetOrientations[sheet] || 'Landscape'; *@
+@*                     orientationInput.value = sheetOrientations[index]; *@
 @*                     form.appendChild(orientationInput); *@
 @*                 }); *@
 
+@*                 // Add anti-forgery token *@
 @*                 const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]'); *@
 @*                 if (antiForgeryToken) { *@
 @*                     form.appendChild(antiForgeryToken.cloneNode(true)); *@
 @*                 } *@
 
-@*                 form.appendChild(sessionIdInput); *@
 @*                 document.body.appendChild(form); *@
-
 @*                 console.log("Submitting form with:", selectedSheets.length, "selected sheets"); *@
 
-@*                 // Reset button state after timeout (fallback) *@
+@*                 // Submit the form *@
+@*                 form.submit(); *@
+
+@*                 // Fallback timeout *@
 @*                 setTimeout(() => { *@
 @*                     if (isConverting) { *@
 @*                         resetButtonState(btn, originalText); *@
 @*                     } *@
-@*                 }, 30000); *@
-
-@*                 form.submit(); *@
-
-@*                 window.addEventListener('beforeunload', function() { *@
-@*                     resetButtonState(btn, originalText); *@
-@*                 }); *@
+@*                 }, 60000); // 1 minute timeout *@
 @*             }); *@
 
 @*             function resetButtonState(btn, originalText) { *@
@@ -1467,104 +1840,72 @@
 @*                 btn.innerHTML = originalText; *@
 @*             } *@
 
+@*             // View sheet button *@
+@*             document.querySelectorAll('.view-sheet').forEach(btn => { *@
+@*                 btn.addEventListener('click', function() { *@
+@*                     const sheetName = this.getAttribute('data-sheet'); *@
+@*                     alert('Preview functionality for: ' + sheetName); *@
+@*                 }); *@
+@*             }); *@
+
 @*             // Initialize *@
 @*             updateOrderNumbers(); *@
 @*             updateSelectedCount(); *@
-
 @*             console.log("✅ Sheet selection and drag & drop initialized successfully"); *@
 @*         }); *@
 @*     </script> *@
+
+@*     <style> *@
+@*         .text-gradient { *@
+@*             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); *@
+@*             -webkit-background-clip: text; *@
+@*             -webkit-text-fill-color: transparent; *@
+@*             background-clip: text; *@
+@*         } *@
+
+@*         .sortable-ghost { *@
+@*             opacity: 0.6; *@
+@*             background: #c8dbf0 !important; *@
+@*             border: 2px dashed #2196f3 !important; *@
+@*         } *@
+
+@*         .sortable-chosen { *@
+@*             background-color: #e3f2fd !important; *@
+@*             transform: rotate(2deg); *@
+@*             box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important; *@
+@*         } *@
+
+@*         .sortable-drag { *@
+@*             opacity: 0.9; *@
+@*             transform: rotate(5deg); *@
+@*             box-shadow: 0 8px 20px rgba(0,0,0,0.3) !important; *@
+@*         } *@
+
+@*         .drag-handle { *@
+@*             cursor: grab !important; *@
+@*             transition: all 0.2s ease; *@
+@*             padding: 4px 2px; *@
+@*             border-radius: 3px; *@
+@*         } *@
+
+@*             .drag-handle:hover { *@
+@*                 background-color: rgba(33, 150, 243, 0.1); *@
+@*                 color: #2196f3 !important; *@
+@*             } *@
+
+@*             .drag-handle:active { *@
+@*                 cursor: grabbing !important; *@
+@*                 background-color: rgba(33, 150, 243, 0.2); *@
+@*             } *@
+
+@*         .order-badge { *@
+@*             min-width: 30px; *@
+@*         } *@
+
+@*         .form-select-sm { *@
+@*             padding: 0.25rem 0.5rem; *@
+@*             font-size: 0.875rem; *@
+@*         } *@
+@*     </style> *@
 @* } *@
 
-@* <style> *@
-@*     .text-gradient { *@
-@*         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); *@
-@*         -webkit-background-clip: text; *@
-@*         -webkit-text-fill-color: transparent; *@
-@*     } *@
-
-@*     /* ✅ Improved Sortable styles */ *@
-@*     .sortable-ghost { *@
-@*         opacity: 0.6; *@
-@*         background: #c8dbf0 !important; *@
-@*         border: 2px dashed #2196f3 !important; *@
-@*     } *@
-
-@*     .sortable-chosen { *@
-@*         background-color: #e3f2fd !important; *@
-@*         transform: rotate(2deg); *@
-@*         box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important; *@
-@*     } *@
-
-@*     .sortable-drag { *@
-@*         opacity: 0.9; *@
-@*         transform: rotate(5deg); *@
-@*         box-shadow: 0 8px 20px rgba(0,0,0,0.3) !important; *@
-@*     } *@
-
-@*     .card { *@
-@*         border-radius: 12px; *@
-@*     } *@
-
-@*     .btn-success { *@
-@*         background: linear-gradient(135deg, #28a745 0%, #20c997 100%); *@
-@*         border: none; *@
-@*         border-radius: 8px; *@
-@*         font-weight: 600; *@
-@*     } *@
-
-@*     /* ✅ Three dots grip icon styles */ *@
-@*     .drag-handle { *@
-@*         cursor: grab !important; *@
-@*         transition: all 0.2s ease; *@
-@*         padding: 4px 2px; *@
-@*         border-radius: 3px; *@
-@*         display: inline-flex; *@
-@*         align-items: center; *@
-@*         justify-content: center; *@
-@*     } *@
-
-@*         .drag-handle:hover { *@
-@*             background-color: rgba(33, 150, 243, 0.1); *@
-@*             color: #2196f3 !important; *@
-@*         } *@
-
-@*         .drag-handle:active { *@
-@*             cursor: grabbing !important; *@
-@*             background-color: rgba(33, 150, 243, 0.2); *@
-@*         } *@
-
-@*     .fa-grip-vertical { *@
-@*         font-size: 14px; *@
-@*     } *@
-
-@*     .sortable-row { *@
-@*         transition: all 0.2s ease; *@
-@*     } *@
-
-@*         .sortable-row:hover { *@
-@*             background-color: #f8f9fa; *@
-@*         } *@
-
-@*     .form-select-sm { *@
-@*         padding: 0.25rem 0.5rem; *@
-@*         font-size: 0.875rem; *@
-@*         border: 1px solid #ced4da; *@
-@*         border-radius: 0.375rem; *@
-@*     } *@
-
-@*     /* Prevent text selection during drag */ *@
-@*     .sortable-row { *@
-@*         -webkit-user-select: none; *@
-@*         -moz-user-select: none; *@
-@*         -ms-user-select: none; *@
-@*         user-select: none; *@
-@*     } *@
-
-@*     code { *@
-@*         background: #f8f9fa; *@
-@*         padding: 2px 6px; *@
-@*         border-radius: 4px; *@
-@*         font-family: 'Courier New', monospace; *@
-@*     } *@
-@* </style> *@

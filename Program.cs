@@ -19,6 +19,7 @@ builder.Services.AddSession(options =>
 // Register services
 builder.Services.AddScoped<LibreOfficeService>();
 builder.Services.AddScoped<ExcelPreviewService>();
+builder.Services.AddScoped<ExcelProcessingService>();
 
 // Increase file upload limits
 builder.Services.Configure<FormOptions>(options =>

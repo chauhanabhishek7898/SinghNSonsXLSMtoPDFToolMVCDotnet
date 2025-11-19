@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ExcelToPdfConverter.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace ExcelToPdfConverter.Models
 {
@@ -81,14 +82,6 @@ namespace ExcelToPdfConverter.Models
         public int Column { get; set; }
     }
 
-    //public class ConversionResult
-    //{
-    //    public bool Success { get; set; }
-    //    public string Message { get; set; } = string.Empty;
-    //    public string PdfFilePath { get; set; } = string.Empty;
-    //    public string FileName { get; set; } = string.Empty;
-    //}
-
     public class ConversionResult
     {
         public bool Success { get; set; }
@@ -119,6 +112,11 @@ namespace ExcelToPdfConverter.Models
         public List<InvoiceDate> AllInvoiceDates { get; set; } = new List<InvoiceDate>();
         public List<FileSelection> FileSelections { get; set; } = new List<FileSelection>();
 
+        // ✅ NEW: Orientation analysis properties
+        public Dictionary<string, string> SuggestedOrientations { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, ExcelPreviewService.SheetOrientationInfo> SheetOrientationAnalysis { get; set; }
+            = new Dictionary<string, ExcelPreviewService.SheetOrientationInfo>();
+
         public bool HasNameErrors => AllNameErrors.Count > 0;
         public bool HasInvoiceDates => AllInvoiceDates.Count > 0;
     }
@@ -143,6 +141,13 @@ namespace ExcelToPdfConverter.Models
         public string? RequestId { get; set; }
 
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    }
+
+    public class FileNamesModel
+    {
+        public string ExcelFileName { get; set; } = string.Empty;
+        public List<string> PdfFileNames { get; set; } = new List<string>();
+        public int TotalPdfFiles { get; set; }
     }
 }
 
