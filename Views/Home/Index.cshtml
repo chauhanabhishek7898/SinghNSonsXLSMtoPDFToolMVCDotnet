@@ -1,0 +1,537 @@
+﻿@model ExcelToPdfConverter.Models.ExcelUploadModel
+@{
+    ViewData["Title"] = "Excel to PDF Converter - Professional Tool";
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<div class="container-fluid px-4 py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <i class="fas fa-file-excel text-primary me-3" style="font-size: 3rem;"></i>
+                    <i class="fas fa-arrow-right text-muted mx-2" style="font-size: 1.5rem;"></i>
+                    <i class="fas fa-file-pdf text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h1 class="display-5 fw-bold text-gradient mb-2">Excel to PDF Converter</h1>
+                <p class="lead text-muted mb-4">Convert your Excel files to professional PDF documents with advanced validation</p>
+            </div>
+
+            <!-- Main Card -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Excel File</h4>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge bg-white text-primary fs-6">100MB Max</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show mb-4 border-0 shadow-sm">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                                <div class="flex-grow-1">
+                                    <h5 class="alert-heading mb-1">Notice</h5>
+                                    <p class="mb-0">@ViewBag.Error</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Validation Results -->
+                    @if (ViewBag.ValidationResult != null)
+                    {
+                        var validationResult = ViewBag.ValidationResult as ExcelToPdfConverter.Models.ValidationResult;
+                        <div class="alert alert-info mb-4 border-0 shadow-sm">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-search me-3 fs-4"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">Validation Results</h5>
+                                    <p class="mb-0">File: <strong>@validationResult.FileName</strong></p>
+                                </div>
+                            </div>
+
+                            <!-- #NAME? Errors Section -->
+                            @if (validationResult.HasNameErrors)
+                            {
+                                <div class="mb-4">
+                                    <h6 class="text-danger mb-3">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        #NAME? Errors Found (@validationResult.NameErrors.Count)
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm">
+                                            <thead class="table-danger">
+                                                <tr>
+                                                    <th>Sheet Name</th>
+                                                    <th>Location</th>
+                                                    <th>Cell Reference</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var error in validationResult.NameErrors)
+                                                {
+                                                    <tr>
+                                                        <td><strong>@error.SheetName</strong></td>
+                                                        <td>@error.FullLocation</td>
+                                                        <td><code>@error.Location</code></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-success border-0 mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-check-circle me-3"></i>
+                                        <div>
+                                            <strong>No #NAME? Errors Found</strong>
+                                            <p class="mb-0">All formulas are working correctly.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Invoice Dates Section -->
+                            @if (validationResult.HasInvoiceDates)
+                            {
+                                <div class="mb-3">
+                                    <h6 class="text-success mb-3">
+                                        <i class="fas fa-calendar-check me-2"></i>
+                                        Invoice Dates Found (@validationResult.InvoiceDates.Count)
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm">
+                                            <thead class="table-success">
+                                                <tr>
+                                                    <th>Sheet Name</th>
+                                                    <th>Invoice Date Text</th>
+                                                    <th>Date Value</th>
+                                                    <th>Location</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var invoiceDate in validationResult.InvoiceDates)
+                                                {
+                                                    <tr>
+                                                        <td><strong>@invoiceDate.SheetName</strong></td>
+                                                        <td><code>@invoiceDate.InvoiceDateText</code></td>
+                                                        <td><strong class="text-primary">@invoiceDate.DateValue</strong></td>
+                                                        <td><code>@invoiceDate.Location</code></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning border-0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-calendar-times me-3"></i>
+                                        <div>
+                                            <strong>No Invoice Dates Found</strong>
+                                            <p class="mb-0">No 'INVOICE DATE' text found in any sheet.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Upload Form -->
+                    <form id="uploadForm" asp-action="Upload" method="post" enctype="multipart/form-data" class="mb-4">
+                        @Html.AntiForgeryToken()
+
+                        <div class="file-upload-area border-dashed rounded-3 p-4 text-center mb-4" id="fileUploadArea">
+                            <i class="fas fa-file-excel text-primary mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="mb-3">Drag & Drop your Excel file here</h5>
+                            <p class="text-muted mb-3">or click to browse</p>
+
+                            <div class="mb-3">
+                                <input type="file" class="form-control d-none" name="ExcelFile" id="ExcelFile"
+                                       accept=".xlsx,.xls,.xlsm" required>
+                                <label for="ExcelFile" class="btn btn-primary btn-lg px-4" id="fileLabel">
+                                    <i class="fas fa-folder-open me-2"></i>Choose File
+                                </label>
+                            </div>
+
+                            <div id="fileName" class="text-muted small mt-2"></div>
+                            <div class="form-text">Supported formats: .xlsx, .xls, .xlsm • Maximum file size: 100MB</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg py-3 fw-bold" id="uploadBtn">
+                                <i class="fas fa-rocket me-2"></i>Upload & Validate File
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Features Grid -->
+                    <div class="row g-4 mt-4">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="feature-card text-center p-3 h-100">
+                                <div class="feature-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px;">
+                                    <i class="fas fa-search fs-4"></i>
+                                </div>
+                                <h6 class="fw-bold">Smart Validation</h6>
+                                <p class="text-muted small mb-0">Automatic detection of #NAME? errors and invoice dates</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="feature-card text-center p-3 h-100">
+                                <div class="feature-icon bg-success bg-opacity-10 text-success rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px;">
+                                    <i class="fas fa-eye fs-4"></i>
+                                </div>
+                                <h6 class="fw-bold">Live Preview</h6>
+                                <p class="text-muted small mb-0">Preview your data with formatting before conversion</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="feature-card text-center p-3 h-100">
+                                <div class="feature-icon bg-warning bg-opacity-10 text-warning rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px;">
+                                    <i class="fas fa-sort fs-4"></i>
+                                </div>
+                                <h6 class="fw-bold">Drag & Drop</h6>
+                                <p class="text-muted small mb-0">Rearrange sheets with intuitive drag and drop interface</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="feature-card text-center p-3 h-100">
+                                <div class="feature-icon bg-danger bg-opacity-10 text-danger rounded-circle mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px;">
+                                    <i class="fas fa-file-pdf fs-4"></i>
+                                </div>
+                                <h6 class="fw-bold">PDF Export</h6>
+                                <p class="text-muted small mb-0">Professional PDF conversion using LibreOffice engine</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('ExcelFile');
+            const fileName = document.getElementById('fileName');
+            const form = document.getElementById('uploadForm');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileLabel = document.getElementById('fileLabel');
+            let isUploading = false;
+
+            // File input change - यह मुख्य फंक्शन है
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    updateFileDisplay(file);
+                }
+            });
+
+            // Drag and drop functionality - FIXED
+            fileUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                fileUploadArea.classList.add('drag-over');
+                fileUploadArea.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+            });
+
+            fileUploadArea.addEventListener('dragenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                fileUploadArea.classList.add('drag-over');
+                fileUploadArea.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+            });
+
+            fileUploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Only remove classes if we're actually leaving the fileUploadArea
+                const relatedTarget = e.relatedTarget;
+                if (!fileUploadArea.contains(relatedTarget)) {
+                    fileUploadArea.classList.remove('drag-over');
+                    fileUploadArea.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+                }
+            });
+
+            fileUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                fileUploadArea.classList.remove('drag-over');
+                fileUploadArea.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+
+                    // File type validation
+                    const allowedTypes = ['.xlsx', '.xls', '.xlsm'];
+                    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+                    if (!allowedTypes.includes(fileExtension)) {
+                        showError('Please select a valid Excel file (.xlsx, .xls, .xlsm)');
+                        return;
+                    }
+
+                    // File size validation (100MB)
+                    if (file.size > 100 * 1024 * 1024) {
+                        showError('File size must be less than 100MB');
+                        return;
+                    }
+
+                    // Set the file to input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+
+                    updateFileDisplay(file);
+
+                    // Show success feedback
+                    showSuccess('File successfully loaded via drag & drop!');
+                }
+            });
+
+            // File upload area click - सीधे file input को trigger करें
+            fileUploadArea.addEventListener('click', function(e) {
+                // सिर्फ तभी trigger करें जब user ने सीधे upload area पर click किया हो
+                // और file label पर नहीं (जो पहले से ही file input से connected है)
+                if (e.target === fileUploadArea || !e.target.closest('label')) {
+                    fileInput.click();
+                }
+            });
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                if (isUploading) {
+                    e.preventDefault();
+                    console.log('Upload already in progress...');
+                    return;
+                }
+
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    showError('Please select a file first.');
+                    e.preventDefault();
+                    return;
+                }
+
+                isUploading = true;
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+                // Timeout fallback
+                setTimeout(() => {
+                    if (isUploading) {
+                        resetUploadButton();
+                    }
+                }, 30000);
+            });
+
+            // File display update function - FIXED
+            function updateFileDisplay(file) {
+                if (file) {
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                    fileName.textContent = `Selected: ${file.name} (${fileSize} MB)`;
+                    fileName.classList.remove('text-muted');
+                    fileName.classList.add('text-success', 'fw-bold');
+
+                    // Update button text
+                    fileLabel.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Change File';
+
+                    // ONLY change border color to green, NO background color change
+                    fileUploadArea.classList.add('border-success');
+                    fileUploadArea.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10', 'bg-success', 'bg-opacity-5');
+
+                    // Remove any background classes that might be there
+                    fileUploadArea.classList.remove('bg-primary', 'bg-success');
+                }
+            }
+
+            // Show error message
+            function showError(message) {
+                // Remove existing alerts
+                const existingAlert = document.querySelector('.alert-dismissible');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show mb-4 border-0 shadow-sm';
+                alertDiv.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-circle me-3 fs-4"></i>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-1">Error</h5>
+                            <p class="mb-0">${message}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                form.parentNode.insertBefore(alertDiv, form);
+            }
+
+            // Show success message
+            function showSuccess(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show mb-4 border-0 shadow-sm';
+                alertDiv.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-3 fs-4"></i>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-1">Success</h5>
+                            <p class="mb-0">${message}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                form.parentNode.insertBefore(alertDiv, form);
+
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 3000);
+            }
+
+            // Reset upload button
+            function resetUploadButton() {
+                isUploading = false;
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Upload & Validate File';
+            }
+
+            // Reset on page load
+            window.addEventListener('load', function() {
+                resetUploadButton();
+            });
+        });
+    </script>
+
+    <style>
+        .text-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+
+        .border-dashed {
+            border: 2px dashed #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background-color: transparent !important; /* Ensure background stays transparent */
+        }
+
+            .file-upload-area:hover {
+                border-color: #667eea;
+                background-color: rgba(102, 126, 234, 0.05);
+            }
+
+            .file-upload-area.drag-over {
+                border-color: #667eea !important;
+                background-color: rgba(102, 126, 234, 0.15) !important;
+                transform: scale(1.02);
+            }
+
+            /* File selected - ONLY border color changes to green */
+            .file-upload-area.border-success {
+                border-color: #198754 !important;
+                /* Background remains normal/transparent */
+                background-color: transparent !important;
+            }
+
+        .feature-card {
+            border: 1px solid #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+            .feature-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                border-color: #667eea;
+            }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .card {
+            border-radius: 15px;
+        }
+
+        .table th {
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Drag and drop animation */
+        @@keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .drag-over {
+            animation: pulse 1s infinite;
+        }
+
+        /* Ensure file name is always visible */
+        #fileName {
+            min-height: 20px;
+            padding: 5px 0;
+        }
+    </style>
+}
+}
