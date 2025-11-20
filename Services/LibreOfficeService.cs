@@ -130,7 +130,7 @@ namespace ExcelToPdfConverter.Services
                             if (sheetOrientations != null && sheetOrientations.Any())
                             {
                                 Console.WriteLine($"🔄 Applying page orientations and rotations...");
-                                foundPath = await ApplyPageOrientations(foundPath, sheetOrientations, selectedSheets);
+                                //foundPath = await ApplyPageOrientations(foundPath, sheetOrientations, selectedSheets);
                             }
 
                             result.Success = true;
@@ -171,15 +171,84 @@ namespace ExcelToPdfConverter.Services
             return result;
         }
 
+
+        private string GetUltimateLibreOfficeArguments()
+        {
+            return @"
+        --headless
+        --norestore
+        --nofirststartwizard
+        --convert-to pdf:calc_pdf_Export
+        --embedfonts
+        --embedstandardfonts
+        --subsetfonts
+        --exportbookmarks
+        --exportlinks
+        --reduceimageresolution=false
+        --imagecompression=0
+        --fit-to-width=1
+        --fit-to-height=0
+        --quality=100
+        --printer-name=""Microsoft Print to PDF""
+        --infilter=""MS Excel 97""
+    ".Replace("\n", " ").Replace("\r", "").Trim();
+        }
         private string BuildLibreOfficeArguments(string inputFilePath, string outputDirectory, List<string>? selectedSheets)
         {
             var arguments = new List<string>
             {
+                //GetUltimateLibreOfficeArguments()
                 "--headless",
                 "--norestore",
                 "--nofirststartwizard",
-                "--convert-to pdf",
+                //"--convert-to pdf",
+                //$"--outdir \"{outputDirectory}\""
+                "--convert-to pdf:calc_pdf_Export",
                 $"--outdir \"{outputDirectory}\""
+    ////"--embedfonts",                     // ✅ Fonts embed करें
+    ////"--embedstandardfonts",             // ✅ Standard fonts
+    ////"--reduceimageresolution=false",    // ✅ Image quality
+    ////$"--outdir \"{outputDirectory}\"",
+    ////$"\"{inputFilePath}\""
+    ///
+
+
+
+
+            //    "--headless",
+            //"--norestore",
+            //"--nofirststartwizard",
+            
+            //// ✅ PROFESSIONAL PDF EXPORT SETTINGS
+            //"--convert-to pdf:calc_pdf_Export", // Excel-specific export filter
+            
+            //// ✅ Design Preservation
+            //"--embedfonts",                    // All fonts embed
+            //"--embedstandardfonts",           // Standard fonts
+            //"--subsetfonts",                  // Font subsetting
+            //"--exportbookmarks",              // Bookmarks
+            //"--exportplaceholders",           // Placeholders
+            //"--exportlinks",                  // Hyperlinks
+            //"--exportformfields",             // Form fields
+            
+            //// ✅ Image Quality
+            //"--reduceimageresolution=false",  // Full image quality
+            //"--imagecompression=0",           // No compression
+            //"--convert-images-to=jpg",        // Better image handling
+            
+            //// ✅ Page Layout
+            //"--print=default",                // Default print range
+            //"--fit-to-width=1",               // Fit to page width
+            //"--fit-to-height=1",              // Fit to page height
+            //"--quality=100",                  // Maximum quality
+            
+            //// ✅ Advanced Settings
+            //"--usetaggedpdf",                 // Tagged PDF (accessibility)
+            //"--view=fitwidth",                // Default view
+            //"--zoom=100",                     // 100% zoom
+            
+            //$"--outdir \"{outputDirectory}\"",
+            //$"\"{inputFilePath}\""
             };
 
             if (selectedSheets != null && selectedSheets.Any())
@@ -190,132 +259,6 @@ namespace ExcelToPdfConverter.Services
             arguments.Add($"\"{inputFilePath}\"");
             return string.Join(" ", arguments);
         }
-
-        //private async Task<string> ApplyPageOrientations(string pdfPath, Dictionary<string, string> sheetOrientations, List<string>? selectedSheets)
-        //{
-        //    string? tempOutputPath = null;
-
-        //    try
-        //    {
-        //        Console.WriteLine("🔄 Applying page orientations and rotations using iText7...");
-
-        //        if (!System.IO.File.Exists(pdfPath))
-        //        {
-        //            Console.WriteLine("❌ PDF file not found for orientation application");
-        //            return pdfPath;
-        //        }
-
-        //        if (sheetOrientations == null || !sheetOrientations.Any())
-        //        {
-        //            Console.WriteLine("ℹ️ No orientations specified, skipping");
-        //            return pdfPath;
-        //        }
-
-        //        tempOutputPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"oriented_{Guid.NewGuid()}.pdf");
-        //        Console.WriteLine($"📁 Temp output path: {tempOutputPath}");
-
-        //        using (var reader = new PdfReader(pdfPath))
-        //        using (var writer = new PdfWriter(tempOutputPath))
-        //        using (var newPdfDoc = new PdfDocument(writer))
-        //        using (var sourcePdfDoc = new PdfDocument(reader))
-        //        {
-        //            var numberOfPages = sourcePdfDoc.GetNumberOfPages();
-        //            Console.WriteLine($"📄 Processing {numberOfPages} pages");
-
-        //            for (int pageNum = 1; pageNum <= numberOfPages; pageNum++)
-        //            {
-        //                string? sheetName = GetSheetNameForPage(selectedSheets, pageNum, numberOfPages);
-        //                string orientation = GetDefaultOrientation(sheetName); // Get default based on sheet name
-
-        //                // Override with user selection if available
-        //                if (sheetName != null && sheetOrientations.ContainsKey(sheetName))
-        //                {
-        //                    orientation = sheetOrientations[sheetName];
-        //                    Console.WriteLine($"🎯 Page {pageNum} ({sheetName}): User selected {orientation}");
-        //                }
-        //                else
-        //                {
-        //                    Console.WriteLine($"📄 Page {pageNum} ({sheetName ?? "Unknown"}): Using default {orientation}");
-        //                }
-
-        //                // Get source page
-        //                var sourcePage = sourcePdfDoc.GetPage(pageNum);
-        //                var sourcePageSize = sourcePage.GetPageSize();
-
-        //                // Determine target page size and rotation
-        //                PageSize targetPageSize;
-        //                float rotation = 0f;
-
-        //                if (orientation == "Portrait")
-        //                {
-        //                    // For AOC and similar sheets, apply 90-degree rotation
-        //                    if (ShouldRotate90Degrees(sheetName))
-        //                    {
-        //                        targetPageSize = PageSize.A4;
-        //                        rotation = 90f; // Rotate 90 degrees clockwise
-        //                        Console.WriteLine($"🔄 Page {pageNum} ({sheetName}): Applying 90° rotation for Portrait");
-        //                    }
-        //                    else
-        //                    {
-        //                        targetPageSize = PageSize.A4;
-        //                        rotation = 0f;
-        //                    }
-        //                }
-        //                else // Landscape
-        //                {
-        //                    targetPageSize = PageSize.A4.Rotate();
-        //                    rotation = 0f;
-        //                }
-
-        //                // Create new page with target size
-        //                var newPage = newPdfDoc.AddNewPage(targetPageSize);
-
-        //                // Copy content from source page
-        //                var copiedPage = sourcePage.CopyAsFormXObject(newPdfDoc);
-
-        //                // Create canvas and apply transformations
-        //                var canvas = new PdfCanvas(newPage);
-
-        //                if (rotation != 0f)
-        //                {
-        //                    // Apply rotation transformation
-        //                    if (rotation == 90f)
-        //                    {
-        //                        // Rotate 90 degrees clockwise and position correctly
-        //                        canvas.ConcatMatrix(0, 1, -1, 0, targetPageSize.GetWidth(), 0);
-        //                    }
-        //                }
-
-        //                // Add the copied content
-        //                canvas.AddXObjectAt(copiedPage, 0, 0);
-        //            }
-
-        //            newPdfDoc.Close();
-        //            sourcePdfDoc.Close();
-        //        }
-
-        //        // Replace original file
-        //        System.IO.File.Delete(pdfPath);
-        //        System.IO.File.Move(tempOutputPath, pdfPath);
-
-        //        Console.WriteLine("✅ Page orientations and rotations applied successfully");
-        //        return pdfPath;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"❌ Error applying orientations with iText7: {ex.Message}");
-        //        Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
-
-        //        // Cleanup temp file
-        //        if (tempOutputPath != null && System.IO.File.Exists(tempOutputPath))
-        //        {
-        //            try { System.IO.File.Delete(tempOutputPath); } catch { }
-        //        }
-
-        //        return pdfPath;
-        //    }
-        //}
-
 
         private async Task<string> ApplyPageOrientations(string pdfPath, Dictionary<string, string> sheetOrientations, List<string> selectedSheets)
         {
