@@ -1,4 +1,5 @@
-﻿using ExcelToPdfConverter.Services;
+﻿using ExcelToPdfConverter.Controllers;
+using ExcelToPdfConverter.Services;
 using Microsoft.AspNetCore.Http.Features;
 using OfficeOpenXml;
 
@@ -8,27 +9,52 @@ var builder = WebApplication.CreateBuilder(args);
 ExcelPackage.License.SetNonCommercialPersonal("ExcelToPdf Converter");
 
 // Add services to the container
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.MaxModelBindingCollectionSize = 1024 * 1024; // Increase model binding size
+});
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-// Register services
-builder.Services.AddScoped<LibreOfficeService>();
+// Register services with enhanced configurations
+builder.Services.AddScoped<LibreOfficeService>(provider =>
+{
+    var env = provider.GetRequiredService<IWebHostEnvironment>();
+    return new LibreOfficeService(env);
+});
+
 builder.Services.AddScoped<ExcelPreviewService>();
 builder.Services.AddScoped<ExcelProcessingService>();
+builder.Services.AddScoped<PdfProcessingService>();
 
-// Increase file upload limits
+// Increase file upload and request limits
 builder.Services.Configure<FormOptions>(options =>
 {
+    options.ValueLengthLimit = int.MaxValue;
     options.MultipartBodyLengthLimit = 104857600; // 100MB
+    options.MultipartBoundaryLengthLimit = int.MaxValue;
+    options.MultipartHeadersCountLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = 104857600; // 100MB
 });
 
 // Add logging
-builder.Services.AddLogging();
+builder.Services.AddLogging(config =>
+{
+    config.AddConsole();
+    config.AddDebug();
+    config.AddConfiguration(builder.Configuration.GetSection("Logging"));
+});
 
 var app = builder.Build();
 
@@ -40,7 +66,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/octet-stream"
+});
+
 app.UseRouting();
 app.UseAuthorization();
 app.UseSession();
@@ -53,75 +84,12 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var libreOfficeService = scope.ServiceProvider.GetRequiredService<LibreOfficeService>();
-     libreOfficeService.CleanupOldFiles();
+    libreOfficeService.CleanupOldFiles();
 }
 
-Console.WriteLine("Excel to PDF Converter started successfully!");
-Console.WriteLine("Supports: .xlsx, .xls, .xlsm files");
+Console.WriteLine("✅ Excel to PDF Converter started successfully!");
+Console.WriteLine("✅ Supports: .xlsx, .xls, .xlsm files");
+Console.WriteLine("✅ Color preservation enabled");
+Console.WriteLine("✅ Enhanced PDF preview available");
 
 app.Run();
-
-
-
-//using ExcelToPdfConverter.Services;
-//using Microsoft.AspNetCore.Http.Features;
-//using OfficeOpenXml;
-
-//var builder = WebApplication.CreateBuilder(args);
-
-//// ✅ EPPlus 8+ License Set karein (Yeh line sabse pehle)
-////ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-//ExcelPackage.License.SetNonCommercialPersonal("ExcelToPdf Converter");
-
-//// Add services to the container
-//builder.Services.AddControllersWithViews();
-//builder.Services.AddSession(options =>
-//{
-//    options.IdleTimeout = TimeSpan.FromMinutes(30);
-//    options.Cookie.HttpOnly = true;
-//    options.Cookie.IsEssential = true;
-//});
-
-//// Register services
-//builder.Services.AddScoped<LibreOfficeService>();
-//builder.Services.AddScoped<ExcelPreviewService>();
-
-//// Increase file upload limits
-//builder.Services.Configure<FormOptions>(options =>
-//{
-//    options.MultipartBodyLengthLimit = 104857600; // 100MB
-//});
-
-//// Add logging
-//builder.Services.AddLogging();
-
-//var app = builder.Build();
-
-//// Configure the HTTP request pipeline
-//if (!app.Environment.IsDevelopment())
-//{
-//    app.UseExceptionHandler("/Home/Error");
-//    app.UseHsts();
-//}
-
-//app.UseHttpsRedirection();
-//app.UseStaticFiles();
-//app.UseRouting();
-//app.UseAuthorization();
-//app.UseSession();
-
-//app.MapControllerRoute(
-//    name: "default",
-//    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-//// Cleanup old files on startup
-//using (var scope = app.Services.CreateScope())
-//{
-//    var libreOfficeService = scope.ServiceProvider.GetRequiredService<LibreOfficeService>();
-//    libreOfficeService.CleanupOldFiles();
-//}
-
-//Console.WriteLine("Excel to PDF Converter started successfully!");
-//Console.WriteLine("Make sure LibreOffice is installed at: C:\\Program Files\\LibreOffice\\program\\soffice.exe");
-
-//app.Run();

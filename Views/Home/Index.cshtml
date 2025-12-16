@@ -59,95 +59,249 @@
                                 </div>
                             </div>
 
-                            <!-- #NAME? Errors Section -->
-                            @if (validationResult.HasNameErrors)
-                            {
-                                <div class="mb-4">
-                                    <h6 class="text-danger mb-3">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        #NAME? Errors Found (@validationResult.NameErrors.Count)
-                                    </h6>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-sm">
-                                            <thead class="table-danger">
-                                                <tr>
-                                                    <th>Sheet Name</th>
-                                                    <th>Location</th>
-                                                    <th>Cell Reference</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var error in validationResult.NameErrors)
-                                                {
-                                                    <tr>
-                                                        <td><strong>@error.SheetName</strong></td>
-                                                        <td>@error.FullLocation</td>
-                                                        <td><code>@error.Location</code></td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="alert alert-success border-0 mb-4">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-check-circle me-3"></i>
-                                        <div>
-                                            <strong>No #NAME? Errors Found</strong>
-                                            <p class="mb-0">All formulas are working correctly.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
+                            <!-- Collapsible Sections -->
+                            <div class="accordion" id="validationAccordion">
 
-                            <!-- Invoice Dates Section -->
-                            @if (validationResult.HasInvoiceDates)
-                            {
-                                <div class="mb-3">
-                                    <h6 class="text-success mb-3">
-                                        <i class="fas fa-calendar-check me-2"></i>
-                                        Invoice Dates Found (@validationResult.InvoiceDates.Count)
-                                    </h6>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-sm">
-                                            <thead class="table-success">
-                                                <tr>
-                                                    <th>Sheet Name</th>
-                                                    <th>Invoice Date Text</th>
-                                                    <th>Date Value</th>
-                                                    <th>Location</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var invoiceDate in validationResult.InvoiceDates)
-                                                {
-                                                    <tr>
-                                                        <td><strong>@invoiceDate.SheetName</strong></td>
-                                                        <td><code>@invoiceDate.InvoiceDateText</code></td>
-                                                        <td><strong class="text-primary">@invoiceDate.DateValue</strong></td>
-                                                        <td><code>@invoiceDate.Location</code></td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="alert alert-warning border-0">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-calendar-times me-3"></i>
-                                        <div>
-                                            <strong>No Invoice Dates Found</strong>
-                                            <p class="mb-0">No 'INVOICE DATE' text found in any sheet.</p>
+                                <!-- #NAME? Errors Section -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button @(validationResult.HasNameErrors ? "" : "collapsed")"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#nameErrorsCollapse"
+                                                aria-expanded="@validationResult.HasNameErrors"
+                                                aria-controls="nameErrorsCollapse">
+                                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                            <strong>#NAME? Errors Found (@validationResult.NameErrors.Count)</strong>
+                                        </button>
+                                    </h2>
+                                    <div id="nameErrorsCollapse" class="accordion-collapse collapse @(validationResult.HasNameErrors ? "show" : "")"
+                                         data-bs-parent="#validationAccordion">
+                                        <div class="accordion-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm">
+                                                    <thead class="table-danger">
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Sheet Name</th>
+                                                            <th>Location</th>
+                                                            <th>Cell Reference</th>
+                                                            <th>Details</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @{
+                                                            int nameErrorIndex = 1;
+                                                            var groupedNameErrors = validationResult.NameErrors
+                                                            .GroupBy(e => e.SheetName)
+                                                            .ToList();
+                                                        }
+                                                        @foreach (var sheetGroup in groupedNameErrors)
+                                                        {
+                                                            <tr class="table-group-divider">
+                                                                <td colspan="5" class="bg-light">
+                                                                    <strong>@sheetGroup.Key</strong> - @sheetGroup.Count() error(s)
+                                                                </td>
+                                                            </tr>
+                                                            @foreach (var error in sheetGroup)
+                                                            {
+                                                                <tr>
+                                                                    <td>@(nameErrorIndex++)</td>
+                                                                    <td><strong>@error.SheetName</strong></td>
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center">
+                                                                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                                                                            @error.FullLocation
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-dark">@error.Location</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <small class="text-muted">
+                                                                            Cell: Row @error.Row, Column @error.ColumnName
+                                                                        </small>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            @if (validationResult.NameErrors.Count > 0)
+                                            {
+                                                <div class="alert alert-warning mt-3 mb-0">
+                                                    <i class="fas fa-lightbulb me-2"></i>
+                                                    <strong>Tip:</strong> Fix #NAME? errors in Excel before conversion.
+                                                    These usually indicate missing named ranges or formula errors.
+                                                </div>
+                                            }
                                         </div>
                                     </div>
                                 </div>
-                            }
+
+                                <!-- Invoice Dates Section -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button @(validationResult.HasInvoiceDates ? "" : "collapsed")"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#invoiceDatesCollapse"
+                                                aria-expanded="@validationResult.HasInvoiceDates"
+                                                aria-controls="invoiceDatesCollapse">
+                                            <i class="fas fa-calendar-check text-success me-2"></i>
+                                            <strong>Invoice Dates Found (@validationResult.InvoiceDates.Count)</strong>
+                                        </button>
+                                    </h2>
+                                    <div id="invoiceDatesCollapse" class="accordion-collapse collapse @(validationResult.HasInvoiceDates ? "show" : "")"
+                                         data-bs-parent="#validationAccordion">
+                                        <div class="accordion-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm">
+                                                    <thead class="table-success">
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Sheet Name</th>
+                                                            <th>Invoice Date Text</th>
+                                                            <th>Date Value</th>
+                                                            <th>Location</th>
+                                                            <th>Details</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @{
+                                                            int invoiceDateIndex = 1;
+                                                            var groupedInvoiceDates = validationResult.InvoiceDates
+                                                            .GroupBy(d => d.SheetName)
+                                                            .ToList();
+                                                        }
+                                                        @foreach (var sheetGroup in groupedInvoiceDates)
+                                                        {
+                                                            <tr class="table-group-divider">
+                                                                <td colspan="6" class="bg-light">
+                                                                    <strong>@sheetGroup.Key</strong> - @sheetGroup.Count() date(s) found
+                                                                </td>
+                                                            </tr>
+                                                            @foreach (var invoiceDate in sheetGroup)
+                                                            {
+                                                                <tr>
+                                                                    <td>@(invoiceDateIndex++)</td>
+                                                                    <td><strong>@invoiceDate.SheetName</strong></td>
+                                                                    <td>
+                                                                        <code class="bg-light p-1 rounded">@invoiceDate.InvoiceDateText</code>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-primary">@invoiceDate.DateValue</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-secondary">@invoiceDate.Location</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <small class="text-muted">
+                                                                            Found at: Row @invoiceDate.Row, Column @invoiceDate.ColumnName
+                                                                        </small>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            @if (validationResult.InvoiceDates.Count > 0)
+                                            {
+                                                <div class="alert alert-info mt-3 mb-0">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    <strong>Note:</strong> @validationResult.InvoiceDates.Count invoice dates found across
+                                                    @groupedInvoiceDates.Count sheets.
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Summary Cards -->
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card border-danger mb-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                <strong>#NAME? Errors Summary</strong>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <span class="badge bg-danger rounded-pill fs-6">
+                                                    @validationResult.NameErrors.Count
+                                                </span>
+                                                Total Errors
+                                            </h5>
+                                            <p class="card-text">
+                                                Found in
+                                                <span class="badge bg-dark">
+                                                    @groupedNameErrors.Count sheet(s)
+                                                </span>
+                                            </p>
+                                            <div class="mt-3">
+                                                @if (validationResult.HasNameErrors)
+                                                {
+                                                    <div class="alert alert-danger mb-2 p-2">
+                                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                                        <strong>Action Required:</strong> Fix these errors before PDF conversion
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="alert alert-success mb-2 p-2">
+                                                        <i class="fas fa-check-circle me-2"></i>
+                                                        <strong>All Good:</strong> No #NAME? errors found
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="card border-success mb-3">
+                                        <div class="card-header bg-success text-white">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-calendar-check me-2"></i>
+                                                <strong>Invoice Dates Summary</strong>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <span class="badge bg-success rounded-pill fs-6">
+                                                    @validationResult.InvoiceDates.Count
+                                                </span>
+                                                Total Dates Found
+                                            </h5>
+                                            <p class="card-text">
+                                                Across
+                                                <span class="badge bg-dark">
+                                                    @groupedInvoiceDates.Count sheet(s)
+                                                </span>
+                                            </p>
+                                            <div class="mt-3">
+                                                @if (validationResult.HasInvoiceDates)
+                                                {
+                                                    <div class="alert alert-success mb-2 p-2">
+                                                        <i class="fas fa-check-circle me-2"></i>
+                                                        <strong>Verified:</strong> Invoice dates have been detected
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="alert alert-warning mb-2 p-2">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                                        <strong>No Dates Found:</strong> No 'INVOICE DATE' text detected
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     }
 
@@ -224,7 +378,6 @@
     </div>
 </div>
 
-
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -236,7 +389,7 @@
             const fileLabel = document.getElementById('fileLabel');
             let isUploading = false;
 
-            // File input change - यह मुख्य फंक्शन है
+            // File input change
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -244,7 +397,7 @@
                 }
             });
 
-            // Drag and drop functionality - FIXED
+            // Drag and drop functionality
             fileUploadArea.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -309,10 +462,9 @@
                 }
             });
 
-            // File upload area click - सीधे file input को trigger करें
+            // File upload area click
             fileUploadArea.addEventListener('click', function(e) {
-                // सिर्फ तभी trigger करें जब user ने सीधे upload area पर click किया हो
-                // और file label पर नहीं (जो पहले से ही file input से connected है)
+                // Only trigger when user clicks directly on upload area
                 if (e.target === fileUploadArea || !e.target.closest('label')) {
                     fileInput.click();
                 }
@@ -344,7 +496,7 @@
                 }, 30000);
             });
 
-            // File display update function - FIXED
+            // File display update function
             function updateFileDisplay(file) {
                 if (file) {
                     const fileSize = (file.size / 1024 / 1024).toFixed(2);
@@ -448,7 +600,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
-            background-color: transparent !important; /* Ensure background stays transparent */
+            background-color: transparent !important;
         }
 
             .file-upload-area:hover {
@@ -465,7 +617,6 @@
             /* File selected - ONLY border color changes to green */
             .file-upload-area.border-success {
                 border-color: #198754 !important;
-                /* Background remains normal/transparent */
                 background-color: transparent !important;
             }
 
@@ -509,23 +660,26 @@
             font-family: 'Courier New', monospace;
         }
 
-        /* Drag and drop animation */
-        @@keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.02);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+        /* Accordion custom styles */
+        .accordion-button:not(.collapsed) {
+            background-color: rgba(var(--bs-primary-rgb), 0.1);
+            color: var(--bs-primary);
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
         }
 
-        .drag-over {
-            animation: pulse 1s infinite;
+        .accordion-button:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        .table-group-divider {
+            border-top: 2px solid #dee2e6;
+        }
+
+        /* Badge styles */
+        .badge {
+            font-size: 0.85em;
+            font-weight: 500;
         }
 
         /* Ensure file name is always visible */
@@ -534,5 +688,4 @@
             padding: 5px 0;
         }
     </style>
-}
 }

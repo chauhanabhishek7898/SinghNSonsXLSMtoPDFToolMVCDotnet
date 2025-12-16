@@ -8,6 +8,14 @@ namespace ExcelToPdfConverter.Models
         public IFormFile? ExcelFile { get; set; }
     }
 
+
+    public class PdfPreviewWithFitToPageRequest
+{
+    public string SessionId { get; set; }
+    public List<string> SelectedSheets { get; set; }
+    public List<PageOrderInfoWithRotation> PageOrderData { get; set; }
+    public bool IncludeMergedPdfs { get; set; }
+}
     public class WorksheetPreview
     {
         public string Name { get; set; } = string.Empty;
@@ -16,8 +24,6 @@ namespace ExcelToPdfConverter.Models
         public int TotalColumns { get; set; }
         public List<List<CellPreview>> Cells { get; set; } = new List<List<CellPreview>>();
         public List<ImagePreview> Images { get; set; } = new List<ImagePreview>();
-
-        // Separate lists for errors and invoice dates
         public List<NameError> NameErrors { get; set; } = new List<NameError>();
         public List<InvoiceDate> InvoiceDates { get; set; } = new List<InvoiceDate>();
         public bool HasNameErrors => NameErrors.Count > 0;
@@ -32,6 +38,9 @@ namespace ExcelToPdfConverter.Models
         public string BackgroundColor { get; set; } = string.Empty;
         public string TextColor { get; set; } = string.Empty;
         public bool IsBold { get; set; }
+        public bool IsItalic { get; set; }
+        public bool Underline { get; set; }
+        public double FontSize { get; set; }
         public string HorizontalAlignment { get; set; } = string.Empty;
         public int ColSpan { get; set; } = 1;
         public int RowSpan { get; set; } = 1;
@@ -98,7 +107,6 @@ namespace ExcelToPdfConverter.Models
         public List<InvoiceDate> InvoiceDates { get; set; } = new List<InvoiceDate>();
         public bool HasNameErrors => NameErrors.Count > 0;
         public bool HasInvoiceDates => InvoiceDates.Count > 0;
-
     }
 
     public class PreviewModel
@@ -106,17 +114,12 @@ namespace ExcelToPdfConverter.Models
         public string OriginalFileName { get; set; } = string.Empty;
         public List<WorksheetPreview> Worksheets { get; set; } = new List<WorksheetPreview>();
         public string SessionId { get; set; } = string.Empty;
-
-        // Separate collections for display
         public List<NameError> AllNameErrors { get; set; } = new List<NameError>();
         public List<InvoiceDate> AllInvoiceDates { get; set; } = new List<InvoiceDate>();
         public List<FileSelection> FileSelections { get; set; } = new List<FileSelection>();
-
-        // ✅ NEW: Orientation analysis properties
         public Dictionary<string, string> SuggestedOrientations { get; set; } = new Dictionary<string, string>();
         public Dictionary<string, ExcelPreviewService.SheetOrientationInfo> SheetOrientationAnalysis { get; set; }
             = new Dictionary<string, ExcelPreviewService.SheetOrientationInfo>();
-
         public bool HasNameErrors => AllNameErrors.Count > 0;
         public bool HasInvoiceDates => AllInvoiceDates.Count > 0;
     }
@@ -131,16 +134,7 @@ namespace ExcelToPdfConverter.Models
         public bool HasInvoiceDates { get; set; }
         public List<NameError> NameErrors { get; set; } = new List<NameError>();
         public List<InvoiceDate> InvoiceDates { get; set; } = new List<InvoiceDate>();
-
-        // Add orientation property
         public string Orientation { get; set; } = "Landscape";
-    }
-
-    public class CustomErrorViewModel
-    {
-        public string? RequestId { get; set; }
-
-        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 
     public class FileNamesModel
@@ -149,4 +143,129 @@ namespace ExcelToPdfConverter.Models
         public List<string> PdfFileNames { get; set; } = new List<string>();
         public int TotalPdfFiles { get; set; }
     }
+
+    public class PdfReorderingRequest
+    {
+        public string SessionId { get; set; }
+        public List<string> SelectedSheets { get; set; }
+        public List<PageOrderInfo> PageOrderData { get; set; }
+        public Dictionary<int, int> RotationData { get; set; }
+    }
+
+    public class PdfConversionResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string FileName { get; set; }
+        public byte[] FileData { get; set; }
+    }
+
+    public class PdfPreviewRequest
+    {
+        public string SessionId { get; set; }
+        public List<string> SelectedSheets { get; set; }
+    }
+
+    public class PdfPreviewResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string PdfData { get; set; }
+        public string FileName { get; set; }
+        public string GeneratedTime { get; set; }
+        public int TotalPages { get; set; }
+    }
+
+    // Existing models के साथ ये नए models जोड़ें
+    public class MarginInfo
+    {
+        public float Top { get; set; } = 10;
+        public float Bottom { get; set; } = 10;
+        public float Left { get; set; } = 10;
+        public float Right { get; set; } = 10;
+    }
+
+    public class PositionInfo
+    {
+        public string Horizontal { get; set; } = "center";
+        public string Vertical { get; set; } = "middle";
+    }
+
+    public class PageOrderInfo
+    {
+        public int OriginalPage { get; set; }
+        public int CurrentOrder { get; set; }
+        public bool Visible { get; set; }
+        public int Rotation { get; set; }
+        public string Orientation { get; set; } = "portrait";
+        public string FitMode { get; set; } = "fitToPage";
+        public MarginInfo Margin { get; set; } = new MarginInfo();
+        public PositionInfo Position { get; set; } = new PositionInfo();
+    }
+
+    public class PdfReorderingRequestWithAllSettings
+    {
+        public string SessionId { get; set; }
+        public List<string> SelectedSheets { get; set; }
+        public List<PageOrderInfo> PageOrderData { get; set; }
+        public Dictionary<int, int> RotationData { get; set; }
+        public Dictionary<int, string> OrientationData { get; set; }
+        public Dictionary<int, string> FitModeData { get; set; }
+        public Dictionary<int, MarginInfo> MarginData { get; set; }
+        public Dictionary<int, PositionInfo> PositionData { get; set; }
+    }
+
+    public class PageOrderInfoWithRotation
+    {
+        public int OriginalPage { get; set; }
+        public int CurrentOrder { get; set; }
+        public bool Visible { get; set; }
+        public string Orientation { get; set; } = "portrait";
+        public int Rotation { get; set; } = 0;
+    }
+
+    public class PdfRequestWithRotation
+    {
+        public string SessionId { get; set; }
+        public List<string> SelectedSheets { get; set; }
+        public List<PageOrderInfoWithRotation> PageOrderData { get; set; }
+        public Dictionary<int, string> OrientationData { get; set; }
+        public Dictionary<int, int> RotationData { get; set; }
+    }
+
+
+
+
+
+
+
+
+
+    public class RemovePdfRequest
+    {
+        public string SessionId { get; set; }
+        public string FileName { get; set; }
+    }
+
+    public class MergePdfRequest
+    {
+        public string SessionId { get; set; }
+    }
+
+    public class DownloadPdfRequest
+    {
+        public string SessionId { get; set; }
+        public string FileName { get; set; }
+    }
+
+    public class MergedPdfInfo
+    {
+        public string FileName { get; set; }
+        public string FilePath { get; set; }
+        public long FileSize { get; set; }
+        public int TotalPages { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+
 }

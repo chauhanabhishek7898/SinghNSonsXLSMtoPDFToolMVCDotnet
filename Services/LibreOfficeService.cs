@@ -126,13 +126,6 @@ namespace ExcelToPdfConverter.Services
 
                         if (foundPath != null)
                         {
-                            // Apply orientations if specified using iText7
-                            if (sheetOrientations != null && sheetOrientations.Any())
-                            {
-                                Console.WriteLine($"🔄 Applying page orientations and rotations...");
-                                //foundPath = await ApplyPageOrientations(foundPath, sheetOrientations, selectedSheets);
-                            }
-
                             result.Success = true;
                             result.Message = "Conversion successful";
                             result.PdfFilePath = foundPath;
@@ -171,90 +164,16 @@ namespace ExcelToPdfConverter.Services
             return result;
         }
 
-
-        private string GetUltimateLibreOfficeArguments()
-        {
-            return @"
-        --headless
-        --norestore
-        --nofirststartwizard
-        --convert-to pdf:calc_pdf_Export
-        --embedfonts
-        --embedstandardfonts
-        --subsetfonts
-        --exportbookmarks
-        --exportlinks
-        --reduceimageresolution=false
-        --imagecompression=0
-        --fit-to-width=1
-        --fit-to-height=0
-        --quality=100
-        --printer-name=""Microsoft Print to PDF""
-        --infilter=""MS Excel 97""
-    ".Replace("\n", " ").Replace("\r", "").Trim();
-        }
         private string BuildLibreOfficeArguments(string inputFilePath, string outputDirectory, List<string>? selectedSheets)
         {
             var arguments = new List<string>
             {
-                //GetUltimateLibreOfficeArguments()
                 "--headless",
                 "--norestore",
                 "--nofirststartwizard",
-                //"--convert-to pdf",
-                //$"--outdir \"{outputDirectory}\""
                 "--convert-to pdf:calc_pdf_Export",
                 $"--outdir \"{outputDirectory}\""
-    ////"--embedfonts",                     // ✅ Fonts embed करें
-    ////"--embedstandardfonts",             // ✅ Standard fonts
-    ////"--reduceimageresolution=false",    // ✅ Image quality
-    ////$"--outdir \"{outputDirectory}\"",
-    ////$"\"{inputFilePath}\""
-    ///
-
-
-
-
-            //    "--headless",
-            //"--norestore",
-            //"--nofirststartwizard",
-            
-            //// ✅ PROFESSIONAL PDF EXPORT SETTINGS
-            //"--convert-to pdf:calc_pdf_Export", // Excel-specific export filter
-            
-            //// ✅ Design Preservation
-            //"--embedfonts",                    // All fonts embed
-            //"--embedstandardfonts",           // Standard fonts
-            //"--subsetfonts",                  // Font subsetting
-            //"--exportbookmarks",              // Bookmarks
-            //"--exportplaceholders",           // Placeholders
-            //"--exportlinks",                  // Hyperlinks
-            //"--exportformfields",             // Form fields
-            
-            //// ✅ Image Quality
-            //"--reduceimageresolution=false",  // Full image quality
-            //"--imagecompression=0",           // No compression
-            //"--convert-images-to=jpg",        // Better image handling
-            
-            //// ✅ Page Layout
-            //"--print=default",                // Default print range
-            //"--fit-to-width=1",               // Fit to page width
-            //"--fit-to-height=1",              // Fit to page height
-            //"--quality=100",                  // Maximum quality
-            
-            //// ✅ Advanced Settings
-            //"--usetaggedpdf",                 // Tagged PDF (accessibility)
-            //"--view=fitwidth",                // Default view
-            //"--zoom=100",                     // 100% zoom
-            
-            //$"--outdir \"{outputDirectory}\"",
-            //$"\"{inputFilePath}\""
             };
-
-            if (selectedSheets != null && selectedSheets.Any())
-            {
-                Console.WriteLine($"Sheet selection specified: {string.Join(", ", selectedSheets)}");
-            }
 
             arguments.Add($"\"{inputFilePath}\"");
             return string.Join(" ", arguments);
@@ -427,10 +346,6 @@ namespace ExcelToPdfConverter.Services
             return "Portrait"; // Default fallback
         }
 
-        // ❌ REMOVED: ShouldRotate90Degrees method - no more 90° rotation complexity
-        // ❌ REMOVED: Complex rotation matrix logic
-
-        // ... REST OF YOUR EXISTING METHODS REMAIN UNCHANGED ...
         // Helper class for page ranges
         public class PageRange
         {
