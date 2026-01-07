@@ -32,6 +32,8 @@ builder.Services.AddScoped<LibreOfficeService>(provider =>
 builder.Services.AddScoped<ExcelPreviewService>();
 builder.Services.AddScoped<ExcelProcessingService>();
 builder.Services.AddScoped<PdfProcessingService>();
+builder.Services.AddScoped<PdfCompressionService>();
+builder.Services.AddHostedService<PdfCleanupService>();
 
 // Increase file upload and request limits
 builder.Services.Configure<FormOptions>(options =>
@@ -92,4 +94,37 @@ Console.WriteLine("✅ Supports: .xlsx, .xls, .xlsm files");
 Console.WriteLine("✅ Color preservation enabled");
 Console.WriteLine("✅ Enhanced PDF preview available");
 
+
+// ✅ Create previews directory if not exists
+var previewsDir = Path.Combine(app.Environment.WebRootPath, "previews");
+if (!Directory.Exists(previewsDir))
+{
+    Directory.CreateDirectory(previewsDir);
+}
+
+// ✅ Cleanup old preview files on startup
+CleanupOldPreviews(previewsDir);
+
+
 app.Run();
+
+
+void CleanupOldPreviews(string directory)
+{
+    try
+    {
+        var files = Directory.GetFiles(directory, "*.pdf");
+        foreach (var file in files)
+        {
+            var fileInfo = new FileInfo(file);
+            if (fileInfo.CreationTime < DateTime.Now.AddHours(-2))
+            {
+                fileInfo.Delete();
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error cleaning up previews: {ex.Message}");
+    }
+}
